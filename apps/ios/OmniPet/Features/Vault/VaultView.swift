@@ -1,20 +1,19 @@
 import SwiftUI
 
 struct VaultView: View {
+    @EnvironmentObject private var appState: AppState
     @State private var isPresentingScanner = false
-    private let petPass = PetPass.sample
-    private let documents = VaultDocument.sampleDocuments
 
     var body: some View {
         NavigationStack {
             List {
                 Section("Pet Pass") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(petPass.petName)
+                        Text(appState.petPass.petName)
                             .font(.title3.bold())
-                        Text("\(petPass.breed) · \(petPass.ageDescription)")
+                        Text("\(appState.petPass.breed) · \(appState.petPass.ageDescription)")
                             .foregroundStyle(.secondary)
-                        Text(petPass.vaccineStatus.label)
+                        Text(appState.petPass.vaccineStatus.label)
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -25,7 +24,7 @@ struct VaultView: View {
                 }
 
                 Section("Documents") {
-                    ForEach(documents) { document in
+                    ForEach(appState.documents) { document in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(document.title)
                                 .font(.headline)
@@ -44,8 +43,10 @@ struct VaultView: View {
                     }
                     .buttonStyle(.bordered)
 
-                    Button("Send Records") { }
-                        .buttonStyle(.borderedProminent)
+                    Button("Send Records") {
+                        appState.sendVaultRecords()
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
                 .padding()
                 .background(.ultraThinMaterial)
@@ -67,7 +68,7 @@ struct VaultView: View {
     }
 
     private var statusColor: Color {
-        switch petPass.vaccineStatus {
+        switch appState.petPass.vaccineStatus {
         case .green: return OmniPetColor.emerald
         case .yellow: return OmniPetColor.warning
         case .red: return OmniPetColor.danger
