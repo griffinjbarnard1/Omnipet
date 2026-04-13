@@ -1,14 +1,13 @@
 import SwiftUI
 
 struct DiscoveryView: View {
-    @State private var query = "Groomers open on Sunday"
-    private let businesses = BusinessProfile.sample
+    @EnvironmentObject private var appState: AppState
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    TextField("Search vets, grooming, boarding…", text: $query)
+                    TextField("Search vets, grooming, boarding…", text: $appState.discoveryQuery)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -16,10 +15,9 @@ struct DiscoveryView: View {
                 Section("Categories") {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            categoryTag(label: "Vet", symbol: "stethoscope")
-                            categoryTag(label: "Daycare", symbol: "figure.2.and.child.holdinghands")
-                            categoryTag(label: "Grooming", symbol: "scissors")
-                            categoryTag(label: "Boarding", symbol: "house")
+                            ForEach(AppState.DiscoveryCategory.allCases) { category in
+                                categoryTag(for: category)
+                            }
                         }
                         .padding(.vertical, 4)
                     }
@@ -31,7 +29,15 @@ struct DiscoveryView: View {
                 }
 
                 Section("Nearby Businesses") {
-                    ForEach(businesses) { business in
+                    if appState.filteredBusinesses.isEmpty {
+                        ContentUnavailableView(
+                            "No matching businesses",
+                            systemImage: "mappin.slash",
+                            description: Text("Try a broader query or switch to another category.")
+                        )
+                    }
+
+                    ForEach(appState.filteredBusinesses) { business in
                         NavigationLink {
                             BusinessProfileView(business: business)
                         } label: {
@@ -60,11 +66,19 @@ struct DiscoveryView: View {
         }
     }
 
-    private func categoryTag(label: String, symbol: String) -> some View {
-        Label(label, systemImage: symbol)
-            .font(.subheadline.weight(.medium))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.quaternary, in: Capsule())
+    private func categoryTag(for category: AppState.DiscoveryCategory) -> some View {
+        let isSelected = appState.selectedDiscoveryCategory == category
+
+        return Button {
+            appState.selectedDiscoveryCategory = category
+        } label: {
+            Text(category.rawValue)
+                .font(.subheadline.weight(.medium))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(isSelected ? OmniPetColor.emerald.opacity(0.2) : Color.quaternary, in: Capsule())
+                .foregroundStyle(isSelected ? OmniPetColor.emerald : Color.primary)
+        }
+        .buttonStyle(.plain)
     }
 }

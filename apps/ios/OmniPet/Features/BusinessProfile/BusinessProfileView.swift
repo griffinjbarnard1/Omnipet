@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct BusinessProfileView: View {
+    @EnvironmentObject private var appState: AppState
     let business: BusinessProfile
 
     var body: some View {
@@ -32,8 +33,10 @@ struct BusinessProfileView: View {
             }
 
             Section("Handshake") {
-                Button("Check-In with Vault") { }
-                    .buttonStyle(.borderedProminent)
+                Button("Check-In with Vault") {
+                    appState.logCheckIn(for: business)
+                }
+                .buttonStyle(.borderedProminent)
                 Button("Call Business") { }
                 Button("Open Website") { }
             }
