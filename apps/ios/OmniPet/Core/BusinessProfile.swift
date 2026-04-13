@@ -20,11 +20,17 @@ struct BusinessProfile: Identifiable, Hashable {
         }
     }
 
+    enum ListingType: String {
+        case business = "Business"
+        case individual = "Individual"
+    }
+
     let id: UUID
     let name: String
     let category: Category
     let distanceMiles: Double
     let partnershipStatus: PartnershipStatus
+    let listingType: ListingType
     let summary: String
     let requirements: [String]
 
@@ -35,6 +41,7 @@ struct BusinessProfile: Identifiable, Hashable {
             category: .vet,
             distanceMiles: 1.2,
             partnershipStatus: .partner,
+            listingType: .business,
             summary: "AAHA-accredited clinic with same-day urgent visits.",
             requirements: ["Rabies", "DHPP", "Recent fecal test"]
         ),
@@ -44,6 +51,7 @@ struct BusinessProfile: Identifiable, Hashable {
             category: .grooming,
             distanceMiles: 2.8,
             partnershipStatus: .nonPartner,
+            listingType: .business,
             summary: "Hand-scissor specialists and breed-specific grooming packages.",
             requirements: ["Rabies", "Bordetella"]
         ),
@@ -53,8 +61,19 @@ struct BusinessProfile: Identifiable, Hashable {
             category: .boarding,
             distanceMiles: 4.1,
             partnershipStatus: .partner,
+            listingType: .business,
             summary: "Overnight suites, play yard webcams, and med administration.",
             requirements: ["Rabies", "Bordetella", "Canine influenza"]
+        ),
+        .init(
+            id: UUID(),
+            name: "Riley's Home Pet Sitting",
+            category: .boarding,
+            distanceMiles: 5.2,
+            partnershipStatus: .nonPartner,
+            listingType: .individual,
+            summary: "Independent in-home boarding host with fenced yard and one-family-at-a-time stays.",
+            requirements: ["Rabies", "Bordetella"]
         )
     ]
 }
