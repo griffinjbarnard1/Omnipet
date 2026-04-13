@@ -1,14 +1,13 @@
 import SwiftUI
 
 struct DiscoveryView: View {
-    @State private var query = "Groomers open on Sunday"
-    private let businesses = BusinessProfile.sample
+    @EnvironmentObject private var discoveryStore: DiscoveryStore
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    TextField("Search vets, grooming, boarding…", text: $query)
+                    TextField("Search vets, grooming, boarding…", text: $discoveryStore.query)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -16,10 +15,10 @@ struct DiscoveryView: View {
                 Section("Categories") {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            categoryTag(label: "Vet", symbol: "stethoscope")
-                            categoryTag(label: "Daycare", symbol: "figure.2.and.child.holdinghands")
-                            categoryTag(label: "Grooming", symbol: "scissors")
-                            categoryTag(label: "Boarding", symbol: "house")
+                            categoryTag(label: "Vet", symbol: "stethoscope", category: .vet)
+                            categoryTag(label: "Daycare", symbol: "figure.2.and.child.holdinghands", category: .daycare)
+                            categoryTag(label: "Grooming", symbol: "scissors", category: .grooming)
+                            categoryTag(label: "Boarding", symbol: "house", category: .boarding)
                         }
                         .padding(.vertical, 4)
                     }
@@ -31,7 +30,7 @@ struct DiscoveryView: View {
                 }
 
                 Section("Nearby Businesses") {
-                    ForEach(businesses) { business in
+                    ForEach(discoveryStore.filteredBusinesses) { business in
                         NavigationLink {
                             BusinessProfileView(business: business)
                         } label: {
@@ -60,11 +59,19 @@ struct DiscoveryView: View {
         }
     }
 
-    private func categoryTag(label: String, symbol: String) -> some View {
+    private func categoryTag(label: String, symbol: String, category: BusinessProfile.Category) -> some View {
+        let isSelected = discoveryStore.selectedCategory == category
         Label(label, systemImage: symbol)
             .font(.subheadline.weight(.medium))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.quaternary, in: Capsule())
+            .background(isSelected ? AnyShapeStyle(OmniPetColor.emerald.opacity(0.2)) : AnyShapeStyle(.quaternary), in: Capsule())
+            .overlay {
+                Capsule()
+                    .stroke(isSelected ? OmniPetColor.emerald : .clear, lineWidth: 1)
+            }
+            .onTapGesture {
+                discoveryStore.selectedCategory = discoveryStore.selectedCategory == category ? nil : category
+            }
     }
 }

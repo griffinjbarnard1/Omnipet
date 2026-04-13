@@ -1,20 +1,19 @@
 import SwiftUI
 
 struct VaultView: View {
+    @EnvironmentObject private var discoveryStore: DiscoveryStore
     @State private var isPresentingScanner = false
-    private let petPass = PetPass.sample
-    private let documents = VaultDocument.sampleDocuments
 
     var body: some View {
         NavigationStack {
             List {
                 Section("Pet Pass") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(petPass.petName)
+                        Text(discoveryStore.petPass.petName)
                             .font(.title3.bold())
-                        Text("\(petPass.breed) · \(petPass.ageDescription)")
+                        Text("\(discoveryStore.petPass.breed) · \(discoveryStore.petPass.ageDescription)")
                             .foregroundStyle(.secondary)
-                        Text(petPass.vaccineStatus.label)
+                        Text(discoveryStore.petPass.vaccineStatus.label)
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -25,7 +24,7 @@ struct VaultView: View {
                 }
 
                 Section("Documents") {
-                    ForEach(documents) { document in
+                    ForEach(discoveryStore.documents) { document in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(document.title)
                                 .font(.headline)
@@ -67,7 +66,7 @@ struct VaultView: View {
     }
 
     private var statusColor: Color {
-        switch petPass.vaccineStatus {
+        switch discoveryStore.petPass.vaccineStatus {
         case .green: return OmniPetColor.emerald
         case .yellow: return OmniPetColor.warning
         case .red: return OmniPetColor.danger
