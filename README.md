@@ -1,44 +1,232 @@
 # OmniPet
 
-OmniPet is a **Search + Logistics engine with a premium pet-data vault**.
+> **OmniPet is a Search & Logistics engine that happens to have the world’s best pet record vault.**
 
-- **Hook:** discovery of vets, groomers, daycares, and boarders.
-- **Retention:** the Vault, where pet records are stored and reused for one-tap check-ins.
-- **Core job:** remove first-time friction by automating the owner ↔ business record handshake.
+OmniPet is built around a simple product truth:
+- **Why people open it (Hook):** to quickly find the right Vet, Daycare, Groomer, or Boarding provider.
+- **Why people keep it (Retention):** their pet’s verified records are already in the Vault, so every future check-in is faster.
 
-## Repository Scaffolding
+This repo contains the product vision, mobile UX architecture, iOS scaffold, and service-level contracts for the **Universal Pet Passport** experience.
+
+---
+
+## Table of Contents
+
+1. [Product Thesis](#product-thesis)
+2. [Core Experience](#core-experience)
+3. [The Service Handshake (Signature Flow)](#the-service-handshake-signature-flow)
+4. [Mobile-First UX Architecture](#mobile-first-ux-architecture)
+5. [System Overview](#system-overview)
+6. [Repository Structure](#repository-structure)
+7. [Current Implementation Status](#current-implementation-status)
+8. [Getting Started](#getting-started)
+9. [Roadmap](#roadmap)
+10. [Design Principles](#design-principles)
+
+---
+
+## Product Thesis
+
+OmniPet’s mission is to eliminate **first-time friction** in pet care.
+
+Today, owners repeatedly:
+- Search for a provider.
+- Re-enter pet details.
+- Hunt for vaccine certificates.
+- Email or upload documents manually.
+
+OmniPet turns that fragmented process into one orchestrated workflow:
+1. **Discover** the business.
+2. **Prepare** required records automatically.
+3. **Send** a professional onboarding pack (secure link or PDF).
+4. **Track** data sharing in an activity log.
+
+Think: **“Plaid for pets”** — a trusted data bridge between pet owners and pet businesses.
+
+---
+
+## Core Experience
+
+### 1) Discovery Hub (The Hook)
+Default entry surface designed like a premium travel app.
+
+- Category action cards: Vet, Daycare, Grooming, Boarding
+- Natural-language search (`"Groomers open on Sunday"`)
+- Map-first discovery with pin taxonomy:
+  - **Gray pins:** scraped / non-partner listings
+  - **Emerald pins:** partner listings with richer in-app actions
+- Smart prompts like **Expiring Soon?** when vault records are near lapse
+
+### 2) Vault (The Retention Engine)
+The owner-controlled source of truth for pet records.
+
+- Pet Pass card (photo, breed, vaccine status)
+- Document folders (Medical, Certificates, Identity, Diet)
+- One-tap sharing via:
+  - Temporary secure web link
+  - Professional PDF summary
+
+### 3) Smart Scanner (The Data Entry Layer)
+Transforms uploads into structured, reusable records.
+
+- Camera + gallery/file input
+- OCR extraction and auto-tagging (clinic, vaccine, expiration)
+- Quality/refusal logic for unreadable captures
+- Guided recovery prompts for blurry or low-light scans
+
+### 4) Business Profile (The Conduit)
+Unified provider profile for partner and non-partner businesses.
+
+- AI-enriched details for scraped listings
+- Primary CTA: **Check-In with Vault** / **Send Intro Pack**
+- Requirement pre-check before sharing records
+
+### 5) Activity (Trust Layer)
+Auditable history of where pet data was shared.
+
+- Sent/opened/action-needed states
+- Timeline for each outbound packet
+- Foundation for future resend/revoke controls
+
+---
+
+## The Service Handshake (Signature Flow)
+
+The Service Handshake is OmniPet’s core UX and business engine:
+
+1. **Search** — owner finds a business.
+2. **Select** — owner chooses Book / Check-In.
+3. **Prepare** — OmniPet validates required records against Vault.
+4. **Execute** — app sends a professional intro with attachments/link.
+5. **Status** — event is logged in Activity.
+
+This flow is what converts discovery traffic into repeat behavior.
+
+---
+
+## Mobile-First UX Architecture
+
+### Navigation
+A floating dock with 3 primary tabs:
+- **Search**
+- **Vault**
+- **Activity**
+
+### Interaction Style (2026 target)
+- Tactile, spatial UI over form-heavy screens
+- High-contrast utility moments (e.g., check-in QR)
+- Fast haptic/audio feedback on key actions
+
+### Quick-Pass Recommendation
+For best front-desk throughput, the **Quick-Pass (QR)** should be accessible from the lock screen via widget, while requiring app authentication before revealing full record details.
+
+---
+
+## System Overview
+
+OmniPet is structured as cooperating services:
+
+- **search-logistics**
+  - Discovery indexing and ranking
+  - Map pin shaping and partner routing
+- **business-ingestion**
+  - Scraping and normalization for non-partner businesses
+- **vault-share**
+  - Data-pack assembly
+  - Secure-link creation
+  - PDF summary generation
+  - Outbound delivery
+- **shared-contracts**
+  - Common schemas/events used across services and clients
+
+---
+
+## Repository Structure
 
 ```text
 apps/
-  ios/                      # Mobile-first client (SwiftUI scaffold)
+  ios/                      # Mobile-first SwiftUI client scaffold
+
 docs/
-  architecture/             # UX and technical architecture docs
-  product/                  # Product intent and flows
+  architecture/             # UX and service boundary documentation
+  product/                  # Product intent and journey framing
+
 services/
-  search-logistics/         # Discovery, ranking, map pins, partner routing
-  vault-share/              # Data-pack assembly + sharing workflow
-  business-ingestion/       # Non-partner profile scraping/enrichment
+  search-logistics/         # Discovery and ranking layer
+  vault-share/              # Share-pack generation + delivery
+  business-ingestion/       # Non-partner profile ingestion
+
 packages/
-  shared-contracts/         # Shared API/event contracts
+  shared-contracts/         # Cross-service/API contract docs
+
+figma/
+  ...                       # Design brief and screen copy references
 ```
 
-## Product Surfaces
+---
 
-1. **Discovery Hub** (default home)
-2. **Vault** (pet pass + documents + sharing)
-3. **Smart Scanner** (OCR + quality gate + auto-tagging)
-4. **Business Profile** (partner + non-partner conduit)
-5. **Activity** (audit trail of data-sharing events)
+## Current Implementation Status
 
-See:
-- `docs/product/universal-pet-passport.md`
-- `docs/architecture/mobile-first-screen-architecture.md`
-- `apps/ios/README.md`
+This repository currently provides:
+- Product and architecture documentation
+- iOS module-first SwiftUI scaffold
+- Placeholder feature screens
+- Service README stubs and shared flow documentation
 
-## Next Implementation Milestones
+Planned next stage is wiring the app scaffold to concrete back-end services and production-grade data pipelines.
 
-1. Generate an Xcode project and wire the SwiftUI feature modules.
-2. Implement Mapbox-backed Discovery with gray/emerald pin taxonomy.
-3. Add OCR pipeline + refusal logic for low-light/blur captures.
-4. Build secure temporary link + PDF summary generation in `vault-share`.
-5. Implement Service Handshake state machine and activity auditing.
+---
+
+## Getting Started
+
+### Prerequisites
+- Xcode 16+ (recommended for modern SwiftUI workflows)
+- Swift 6 toolchain
+
+### Read first
+1. `docs/product/universal-pet-passport.md`
+2. `docs/architecture/mobile-first-screen-architecture.md`
+3. `apps/ios/README.md`
+4. `packages/shared-contracts/service-handshake-flow.md`
+
+### Suggested build sequence
+1. Generate/create the iOS project structure from the existing scaffold.
+2. Implement Discovery map + search pipeline integration.
+3. Implement Vault ingestion and document metadata model.
+4. Implement share-pack generation (`vault-share`) and activity event logging.
+5. Wire full Service Handshake end-to-end.
+
+---
+
+## Roadmap
+
+### Near-term
+- Wire SwiftUI screens to real view models and routes
+- Add map provider integration and category filtering
+- Add OCR pipeline with quality confidence scoring
+- Generate secure temporary links + PDF exports
+
+### Mid-term
+- Partner business onboarding APIs
+- Requirement prediction per provider type
+- Consent and data-sharing policy controls
+
+### Long-term
+- Universal check-in interoperability
+- Cross-city travel mode with expiring access codes
+- Rich business dashboard for inbound OmniPet packets
+
+---
+
+## Design Principles
+
+- **Search first:** discovery quality drives acquisition.
+- **Consent always:** owner authorizes every outbound data action.
+- **Professional output:** every packet should look business-ready.
+- **One-tap repeatability:** every future booking/check-in gets easier.
+- **Transparent trust:** users can always see where data was shared.
+
+---
+
+If you are extending this repo, preserve the product split:
+**Discovery is the hook. Vault is the moat. Handshake is the engine.**
