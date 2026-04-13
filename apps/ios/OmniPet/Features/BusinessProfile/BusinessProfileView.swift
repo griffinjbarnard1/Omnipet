@@ -2,6 +2,8 @@ import SwiftUI
 
 struct BusinessProfileView: View {
     @EnvironmentObject private var discoveryStore: DiscoveryStore
+    @Environment(\.openURL) private var openURL
+    @State private var didShowCheckInConfirmation = false
     let business: BusinessProfile
 
     var body: some View {
@@ -44,19 +46,39 @@ struct BusinessProfileView: View {
                         Label(requirement, systemImage: "xmark.circle")
                             .foregroundStyle(OmniPetColor.danger)
                     }
+                    Button("Fix in Vault") {
+                        discoveryStore.selectedTab = .vault
+                    }
                 }
             }
 
             Section("Handshake") {
                 Button("Check-In with Vault") {
                     discoveryStore.checkIn(with: business)
+                    didShowCheckInConfirmation = true
                 }
                 .disabled(!availability.isReadyForCheckIn)
                 .buttonStyle(.borderedProminent)
-                Button("Call Business") { }
-                Button("Open Website") { }
+                Button("Call Business") {
+                    guard
+                        let number = business.phoneNumber,
+                        let url = URL(string: "tel://\(number)")
+                    else { return }
+                    openURL(url)
+                }
+                .disabled(business.phoneNumber == nil)
+                Button("Open Website") {
+                    guard let url = business.websiteURL else { return }
+                    openURL(url)
+                }
+                .disabled(business.websiteURL == nil)
             }
         }
         .navigationTitle("Business Profile")
+        .alert("Check-in sent", isPresented: $didShowCheckInConfirmation) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Your Vault packet was logged in Activity.")
+        }
     }
 }

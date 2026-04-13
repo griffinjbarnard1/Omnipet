@@ -44,6 +44,13 @@ struct DiscoveryView: View {
                         Label(error, systemImage: "exclamationmark.triangle")
                             .foregroundStyle(OmniPetColor.warning)
                     }
+                    if !discoveryStore.isLoading && discoveryStore.filteredBusinesses.isEmpty {
+                        ContentUnavailableView(
+                            "No results",
+                            systemImage: "magnifyingglass",
+                            description: Text("Try a different search term or clear your category filter.")
+                        )
+                    }
                     ForEach(discoveryStore.filteredBusinesses) { business in
                         NavigationLink {
                             BusinessProfileView(business: business)
@@ -70,6 +77,12 @@ struct DiscoveryView: View {
                             .padding(.vertical, 4)
                         }
                     }
+                }
+
+                Section("Next Steps") {
+                    Label("Add map and pin taxonomy for partner vs non-partner listings", systemImage: "map")
+                    Label("Track analytics for search, profile opens, and check-ins", systemImage: "chart.xyaxis.line")
+                    Label("Capture user consent before outbound vault sharing", systemImage: "checkmark.shield")
                 }
             }
             .navigationTitle("Discovery")
