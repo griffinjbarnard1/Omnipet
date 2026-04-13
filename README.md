@@ -1,10 +1,10 @@
 # OmniPet
 
-> **OmniPet is a Search & Logistics engine that happens to have the world’s best pet record vault.**
+> **OmniPet is a discovery-to-check-in platform for pet care, powered by a portable Pet Passport.**
 
 OmniPet is built around a simple product truth:
-- **Why people open it (Hook):** to quickly find the right Vet, Daycare, Groomer, or Boarding provider.
-- **Why people keep it (Retention):** their pet’s verified records are already in the Vault, so every future check-in is faster.
+- **Why people open it (Hook):** to discover the right Vet, Daycare, Groomer, Boarding provider, or in-home sitter.
+- **Why people keep it (Retention):** their pet’s verified records live in the Vault, so every future check-in is faster and safer.
 
 This repo contains the product vision, mobile UX architecture, iOS scaffold, and service-level contracts for the **Universal Pet Passport** experience.
 
@@ -14,7 +14,7 @@ This repo contains the product vision, mobile UX architecture, iOS scaffold, and
 
 1. [Product Thesis](#product-thesis)
 2. [Core Experience](#core-experience)
-3. [The Service Handshake (Signature Flow)](#the-service-handshake-signature-flow)
+3. [The Care Handshake (Signature Flow)](#the-care-handshake-signature-flow)
 4. [Mobile-First UX Architecture](#mobile-first-ux-architecture)
 5. [System Overview](#system-overview)
 6. [Repository Structure](#repository-structure)
@@ -38,16 +38,17 @@ Today, owners repeatedly:
 OmniPet turns that fragmented process into one orchestrated workflow:
 1. **Discover** the business.
 2. **Prepare** required records automatically.
-3. **Send** a professional onboarding pack (secure link or PDF).
-4. **Track** data sharing in an activity log.
+3. **Confirm** owner consent and sharing scope.
+4. **Send** a professional onboarding pack (secure link or PDF).
+5. **Track** data sharing in an activity log.
 
-Think: **“Plaid for pets”** — a trusted data bridge between pet owners and pet businesses.
+Think: **“Travel wallet + trusted handoff rail for pets.”**
 
 ---
 
 ## Core Experience
 
-### 1) Discovery Hub (The Hook)
+### 1) Discover Hub (The Hook)
 Default entry surface designed like a premium travel app.
 
 - Category action cards: Vet, Daycare, Grooming, Boarding
@@ -56,6 +57,7 @@ Default entry surface designed like a premium travel app.
   - **Gray pins:** scraped / non-partner listings
   - **Emerald pins:** partner listings with richer in-app actions
 - Smart prompts like **Expiring Soon?** when vault records are near lapse
+- Ranking signals: relevance, distance, profile quality, and partner capability
 
 ### 2) Vault (The Retention Engine)
 The owner-controlled source of truth for pet records.
@@ -80,6 +82,7 @@ Unified provider profile for partner and non-partner businesses.
 - AI-enriched details for scraped listings
 - Primary CTA: **Check-In with Vault** / **Send Intro Pack**
 - Requirement pre-check before sharing records
+- Contact fallback actions (call, site, directions) when check-in is not yet possible
 
 ### 5) Activity (Trust Layer)
 Auditable history of where pet data was shared.
@@ -90,15 +93,16 @@ Auditable history of where pet data was shared.
 
 ---
 
-## The Service Handshake (Signature Flow)
+## The Care Handshake (Signature Flow)
 
-The Service Handshake is OmniPet’s core UX and business engine:
+The Care Handshake is OmniPet’s core UX and business engine:
 
 1. **Search** — owner finds a business.
 2. **Select** — owner chooses Book / Check-In.
 3. **Prepare** — OmniPet validates required records against Vault.
-4. **Execute** — app sends a professional intro with attachments/link.
-5. **Status** — event is logged in Activity.
+4. **Consent** — owner confirms what is being shared and for how long.
+5. **Execute** — app sends a professional intro with attachments/link.
+6. **Status** — event is logged in Activity.
 
 This flow is what converts discovery traffic into repeat behavior.
 
@@ -108,7 +112,7 @@ This flow is what converts discovery traffic into repeat behavior.
 
 ### Navigation
 A floating dock with 3 primary tabs:
-- **Search**
+- **Discover**
 - **Vault**
 - **Activity**
 
@@ -116,6 +120,7 @@ A floating dock with 3 primary tabs:
 - Tactile, spatial UI over form-heavy screens
 - High-contrast utility moments (e.g., check-in QR)
 - Fast haptic/audio feedback on key actions
+- Progressive disclosure: lightweight browse first, detailed handoff only when user commits
 
 ### Quick-Pass Recommendation
 For best front-desk throughput, the **Quick-Pass (QR)** should be accessible from the lock screen via widget, while requiring app authentication before revealing full record details.
@@ -138,6 +143,7 @@ OmniPet is structured as cooperating services:
   - Outbound delivery
 - **shared-contracts**
   - Common schemas/events used across services and clients
+  - Canonical state definitions for the Care Handshake lifecycle
 
 ---
 
@@ -188,13 +194,14 @@ Planned next stage is wiring the app scaffold to concrete back-end services and 
 2. `docs/architecture/mobile-first-screen-architecture.md`
 3. `apps/ios/README.md`
 4. `packages/shared-contracts/service-handshake-flow.md`
+5. `docs/architecture/discovery-party-e2e-gaps.md`
 
 ### Suggested build sequence
 1. Generate/create the iOS project structure from the existing scaffold.
 2. Implement Discovery map + search pipeline integration.
 3. Implement Vault ingestion and document metadata model.
 4. Implement share-pack generation (`vault-share`) and activity event logging.
-5. Wire full Service Handshake end-to-end.
+5. Wire full Care Handshake end-to-end.
 
 ---
 
@@ -220,13 +227,7 @@ Planned next stage is wiring the app scaffold to concrete back-end services and 
 
 ## Design Principles
 
-- **Search first:** discovery quality drives acquisition.
-- **Consent always:** owner authorizes every outbound data action.
-- **Professional output:** every packet should look business-ready.
-- **One-tap repeatability:** every future booking/check-in gets easier.
-- **Transparent trust:** users can always see where data was shared.
-
----
-
-If you are extending this repo, preserve the product split:
-**Discovery is the hook. Vault is the moat. Handshake is the engine.**
+- Lead with discovery, but close the loop with trusted check-in.
+- Make consent explicit and revocation understandable.
+- Keep status legible: what was shared, with whom, and when.
+- Reward complete Vault records with materially faster onboarding.

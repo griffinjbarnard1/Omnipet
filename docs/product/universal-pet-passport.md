@@ -1,40 +1,42 @@
 # OmniPet Product Intent — Universal Pet Passport
 
 ## Core Purpose
-OmniPet acts as a **Universal Pet Passport** that automates first-time onboarding with pet businesses.
+OmniPet is a **discover → prepare → consent → handoff** experience for pet care.
 
-### Intent
-- Eliminate repetitive form-filling and back-and-forth calls.
-- Put owners in control of pet data sharing.
-- Convert fragmented records into reusable, professional onboarding packs.
+It should feel like a travel wallet for pets: owners can quickly find care options, prove readiness, and complete first-time onboarding without repetitive forms.
 
-### Positioning
-- **Search & Logistics engine first** (why users open the app).
-- **Vault second** (why users stay and keep returning).
+## Positioning
+- **Discover Hub first:** the top-of-funnel reason owners open OmniPet.
+- **Vault reliability second:** the reason owners keep using OmniPet.
+- **Handshake trust always:** the reason businesses accept OmniPet packets.
 
 ## Value Proposition
 
-1. Discover businesses quickly (even if not platform partners).
-2. Prepare required records automatically from the Vault.
-3. Send polished record packs by secure link or PDF to any recipient.
-4. Track where data was shared via a clear activity log.
+1. Discover businesses quickly (partner + non-partner listings).
+2. Pre-check likely requirements against existing Vault records.
+3. Capture explicit owner consent before sharing.
+4. Send polished record packs by secure link or PDF.
+5. Track status in Activity so sharing remains auditable.
 
-## Service Handshake Flow
+## Care Handshake Flow (Canonical)
 
-1. **Search**: user finds a provider in Discovery.
-2. **Select**: user taps Book / Check-In.
-3. **Prepare**: OmniPet pre-validates likely requirements against Vault inventory.
-4. **Execute**: OmniPet sends a professional intro with verified attachments.
-5. **Status**: event is logged in Activity for owner visibility.
+1. **Discover**: owner finds a provider in Discover.
+2. **Select**: owner taps Check-In / Book intent.
+3. **Prepare**: OmniPet validates requirements vs Vault inventory.
+4. **Consent**: owner confirms scope, recipient, and duration.
+5. **Execute**: OmniPet sends a professional packet.
+6. **Status**: event is logged to Activity (sent/opened/action-needed).
 
-## Hook vs Retention
+## Hook vs Retention Metrics
 
-- **Hook KPI ideas:** search-to-profile open rate, profile-to-CTA conversion, partner booking starts.
-- **Retention KPI ideas:** doc upload completion, monthly sends per owner, repeat check-in conversion.
+- **Hook metrics (Discover):** search-to-profile open rate, profile-to-check-in attempt rate, partner booking starts.
+- **Handshake metrics (Conversion):** readiness pass rate, consent completion rate, successful send rate.
+- **Retention metrics (Vault + Activity):** monthly sends per owner, document freshness score, repeat check-in conversion.
 
 ## Product Principles
 
-- **Owner-first consent:** no outbound data transfer without explicit approval.
-- **Professional output:** every send should feel business-ready.
-- **Low-friction UX:** one-tap where possible, guided where needed.
-- **Trust through visibility:** every share is auditable in Activity.
+- **Owner-first consent:** no outbound transfer without explicit approval.
+- **Clear readiness:** users should know exactly what is missing and how to fix it.
+- **Professional output:** every packet should be business-ready.
+- **Trust through visibility:** every share is traceable in Activity.
+- **Graceful fallback:** call/site/directions flows exist when handoff is blocked.
