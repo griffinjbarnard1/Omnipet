@@ -174,8 +174,8 @@ final class DiscoveryStore: ObservableObject {
             id: UUID(),
             businessName: business.name,
             detail: availability.isReadyForCheckIn
-                ? "Discovery handshake complete with vault packet."
-                : "Discovery handshake paused. Missing: \(availability.missingRequirements.joined(separator: ", "))",
+                ? "Care Handshake complete with Vault packet."
+                : "Care Handshake paused. Missing: \(availability.missingRequirements.joined(separator: ", "))",
             sentAtText: "Today, just now",
             status: availability.isReadyForCheckIn ? .sent : .actionNeeded
         )

@@ -35,6 +35,24 @@ struct DiscoveryView: View {
                         .foregroundStyle(OmniPetColor.warning)
                 }
 
+                Section("Care Handshake") {
+                    flowStageChip(
+                        title: "Find",
+                        detail: "Search nearby pet services by category or natural language.",
+                        symbol: "magnifyingglass"
+                    )
+                    flowStageChip(
+                        title: "Prepare",
+                        detail: "Review requirements and fix any missing records in Vault.",
+                        symbol: "checklist"
+                    )
+                    flowStageChip(
+                        title: "Share",
+                        detail: "Check-in with Vault to send a professional packet.",
+                        symbol: "paperplane"
+                    )
+                }
+
                 Section("Nearby Businesses") {
                     if discoveryStore.isLoading {
                         Label("Searching live internet listings…", systemImage: "network")
@@ -78,14 +96,8 @@ struct DiscoveryView: View {
                         }
                     }
                 }
-
-                Section("Next Steps") {
-                    Label("Add map and pin taxonomy for partner vs non-partner listings", systemImage: "map")
-                    Label("Track analytics for search, profile opens, and check-ins", systemImage: "chart.xyaxis.line")
-                    Label("Capture user consent before outbound vault sharing", systemImage: "checkmark.shield")
-                }
             }
-            .navigationTitle("Discovery")
+            .navigationTitle("Discover")
             .refreshable {
                 discoveryStore.refreshNow()
             }
@@ -106,5 +118,16 @@ struct DiscoveryView: View {
             .onTapGesture {
                 discoveryStore.selectedCategory = discoveryStore.selectedCategory == category ? nil : category
             }
+    }
+
+    private func flowStageChip(title: String, detail: String, symbol: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(title, systemImage: symbol)
+                .font(.subheadline.weight(.semibold))
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 2)
     }
 }

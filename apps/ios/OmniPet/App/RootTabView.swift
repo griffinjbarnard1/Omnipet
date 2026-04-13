@@ -8,7 +8,7 @@ struct RootTabView: View {
             DiscoveryView()
                 .tag(AppTab.discovery)
                 .tabItem {
-                    Label("Search", systemImage: "magnifyingglass")
+                    Label("Discover", systemImage: "magnifyingglass")
                 }
 
             VaultView()
