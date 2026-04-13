@@ -14,7 +14,8 @@ This document tracks what currently works for the iOS discovery path and what is
 ## Gaps Identified
 
 ### Data and APIs
-- Discovery uses local sample business data (no service integration).
+- Discovery now queries Apple Maps (`MKLocalSearch`) for live internet listings across vet/daycare/grooming/boarding plus pet-sitter terms.
+- Boarding "individual host" detection is currently heuristic (name/query text match like "pet sitter" / "in-home"), not a dedicated marketplace integration.
 - Requirement matching is string-based and not backed by canonical medical codes.
 - Activity status timestamps are static text (not true time/event objects).
 

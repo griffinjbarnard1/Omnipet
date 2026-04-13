@@ -13,7 +13,7 @@ struct BusinessProfileView: View {
                         Text(business.name)
                             .font(.title3.bold())
                         Spacer()
-                        Text(business.category.rawValue)
+                        Text("\(business.category.rawValue) · \(business.listingType.rawValue)")
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)

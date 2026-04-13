@@ -7,7 +7,13 @@ struct DiscoveryView: View {
         NavigationStack {
             List {
                 Section {
-                    TextField("Search vets, grooming, boarding…", text: $discoveryStore.query)
+                    TextField(
+                        "Search vets, daycare, grooming, boarding, pet sitters…",
+                        text: Binding(
+                            get: { discoveryStore.query },
+                            set: { discoveryStore.updateQuery($0) }
+                        )
+                    )
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -30,6 +36,14 @@ struct DiscoveryView: View {
                 }
 
                 Section("Nearby Businesses") {
+                    if discoveryStore.isLoading {
+                        Label("Searching live internet listings…", systemImage: "network")
+                            .foregroundStyle(.secondary)
+                    }
+                    if let error = discoveryStore.lastError {
+                        Label(error, systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(OmniPetColor.warning)
+                    }
                     ForEach(discoveryStore.filteredBusinesses) { business in
                         NavigationLink {
                             BusinessProfileView(business: business)
@@ -49,6 +63,9 @@ struct DiscoveryView: View {
                                 Label(business.partnershipStatus.label, systemImage: business.partnershipStatus == .partner ? "checkmark.seal.fill" : "mappin")
                                     .font(.caption)
                                     .foregroundStyle(business.partnershipStatus == .partner ? OmniPetColor.emerald : OmniPetColor.grayPin)
+                                Text(business.listingType.rawValue)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
                             }
                             .padding(.vertical, 4)
                         }
@@ -56,6 +73,9 @@ struct DiscoveryView: View {
                 }
             }
             .navigationTitle("Discovery")
+            .refreshable {
+                discoveryStore.refreshNow()
+            }
         }
     }
 
