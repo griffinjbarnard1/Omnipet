@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct ActivityView: View {
-    private let events = ShareActivityEvent.sampleEvents
+    @EnvironmentObject private var discoveryStore: DiscoveryStore
 
     var body: some View {
         NavigationStack {
-            List(events) { event in
+            List(discoveryStore.activityEvents) { event in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text(event.businessName)

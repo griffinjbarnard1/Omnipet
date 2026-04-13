@@ -51,6 +51,16 @@ struct VaultDocument: Identifiable, Hashable {
     ]
 }
 
+extension VaultDocument {
+    var normalizedTitle: String {
+        title
+            .lowercased()
+            .replacingOccurrences(of: "vaccination", with: "")
+            .replacingOccurrences(of: "certificate", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 struct ShareActivityEvent: Identifiable, Hashable {
     enum Status: String {
         case sent = "Sent"
