@@ -3,6 +3,7 @@ import MapKit
 
 @MainActor
 final class DiscoveryStore: ObservableObject {
+    @Published var selectedTab: AppTab = .discovery
     @Published var query = ""
     @Published var selectedCategory: BusinessProfile.Category? {
         didSet { scheduleRefresh() }
@@ -145,7 +146,9 @@ final class DiscoveryStore: ObservableObject {
             partnershipStatus: .nonPartner,
             listingType: isIndividual ? .individual : .business,
             summary: item.placemark.title ?? "Live internet listing via Apple Maps search.",
-            requirements: requirements
+            requirements: requirements,
+            phoneNumber: item.phoneNumber?.filter { $0.isNumber },
+            websiteURL: item.url
         )
     }
 

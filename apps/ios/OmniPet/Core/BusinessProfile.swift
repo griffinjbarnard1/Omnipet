@@ -33,6 +33,8 @@ struct BusinessProfile: Identifiable, Hashable {
     let listingType: ListingType
     let summary: String
     let requirements: [String]
+    let phoneNumber: String?
+    let websiteURL: URL?
 
     static let sample: [BusinessProfile] = [
         .init(
@@ -43,7 +45,9 @@ struct BusinessProfile: Identifiable, Hashable {
             partnershipStatus: .partner,
             listingType: .business,
             summary: "AAHA-accredited clinic with same-day urgent visits.",
-            requirements: ["Rabies", "DHPP", "Recent fecal test"]
+            requirements: ["Rabies", "DHPP", "Recent fecal test"],
+            phoneNumber: "2125550102",
+            websiteURL: URL(string: "https://example.com/canal-street-vet")
         ),
         .init(
             id: UUID(),
@@ -53,7 +57,9 @@ struct BusinessProfile: Identifiable, Hashable {
             partnershipStatus: .nonPartner,
             listingType: .business,
             summary: "Hand-scissor specialists and breed-specific grooming packages.",
-            requirements: ["Rabies", "Bordetella"]
+            requirements: ["Rabies", "Bordetella"],
+            phoneNumber: "2125550148",
+            websiteURL: URL(string: "https://example.com/pine-paw-grooming")
         ),
         .init(
             id: UUID(),
@@ -63,7 +69,9 @@ struct BusinessProfile: Identifiable, Hashable {
             partnershipStatus: .partner,
             listingType: .business,
             summary: "Overnight suites, play yard webcams, and med administration.",
-            requirements: ["Rabies", "Bordetella", "Canine influenza"]
+            requirements: ["Rabies", "Bordetella", "Canine influenza"],
+            phoneNumber: "2125550161",
+            websiteURL: URL(string: "https://example.com/happy-trails-boarding")
         ),
         .init(
             id: UUID(),
@@ -73,7 +81,9 @@ struct BusinessProfile: Identifiable, Hashable {
             partnershipStatus: .nonPartner,
             listingType: .individual,
             summary: "Independent in-home boarding host with fenced yard and one-family-at-a-time stays.",
-            requirements: ["Rabies", "Bordetella"]
+            requirements: ["Rabies", "Bordetella"],
+            phoneNumber: nil,
+            websiteURL: nil
         )
     ]
 }
