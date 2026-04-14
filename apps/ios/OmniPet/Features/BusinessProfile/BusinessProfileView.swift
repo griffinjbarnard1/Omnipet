@@ -35,8 +35,13 @@ struct BusinessProfileView: View {
                     }
                     Text(business.summary)
                         .foregroundStyle(.secondary)
-                    Label(business.partnershipStatus.label, systemImage: business.partnershipStatus == .partner ? "checkmark.seal.fill" : "mappin")
-                        .foregroundStyle(business.partnershipStatus == .partner ? OmniPetColor.emerald : OmniPetColor.grayPin)
+                    HStack(spacing: 12) {
+                        Label(business.partnershipStatus.label, systemImage: business.partnershipStatus == .partner ? "checkmark.seal.fill" : "mappin")
+                            .foregroundStyle(business.partnershipStatus == .partner ? OmniPetColor.emerald : OmniPetColor.grayPin)
+                        Label(String(format: "%.1f mi", business.distanceMiles), systemImage: "location")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.subheadline)
                 }
                 .padding(.vertical, 4)
             }

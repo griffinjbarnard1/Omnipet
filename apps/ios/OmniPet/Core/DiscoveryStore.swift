@@ -244,8 +244,19 @@ final class DiscoveryStore: ObservableObject {
         documents.append(document)
     }
 
+    func updateDocument(_ document: VaultDocument) {
+        guard let idx = documents.firstIndex(where: { $0.id == document.id }) else { return }
+        documents[idx] = document
+    }
+
     func deleteDocument(at offsets: IndexSet) {
         documents.remove(atOffsets: offsets)
+    }
+
+    func updatePetPass(_ pass: PetPass) {
+        let speciesChanged = petPass.species != pass.species
+        petPass = pass
+        if speciesChanged { scheduleRefresh() }
     }
 
     func deleteActivityEvent(at offsets: IndexSet) {

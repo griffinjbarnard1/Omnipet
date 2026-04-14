@@ -100,8 +100,12 @@ struct DiscoveryView: View {
 
                 if discoveryStore.hasExpiringSoonDocuments {
                     Section("Smart Suggestions") {
-                        Label("Expiring Soon? Send an updated record pack", systemImage: "sparkles")
-                            .foregroundStyle(OmniPetColor.warning)
+                        Button {
+                            discoveryStore.selectedTab = .vault
+                        } label: {
+                            Label("Expiring Soon — update records in Vault", systemImage: "sparkles")
+                                .foregroundStyle(OmniPetColor.warning)
+                        }
                     }
                 }
 
@@ -123,14 +127,23 @@ struct DiscoveryView: View {
                     )
                 }
 
+                if discoveryStore.lastError != nil {
+                    Section {
+                        Label("Offline — showing sample businesses", systemImage: "wifi.slash")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .listRowBackground(OmniPetColor.warning)
+                    }
+                }
+
                 Section("Nearby Businesses (\(discoveryStore.filteredBusinesses.count))") {
                     if discoveryStore.isLoading {
-                        Label("Searching live internet listings…", systemImage: "network")
-                            .foregroundStyle(.secondary)
-                    }
-                    if let error = discoveryStore.lastError {
-                        Label(error, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(OmniPetColor.warning)
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text("Searching nearby…")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     if !discoveryStore.isLoading && discoveryStore.filteredBusinesses.isEmpty {
                         ContentUnavailableView(
