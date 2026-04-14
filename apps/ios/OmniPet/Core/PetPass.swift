@@ -5,26 +5,11 @@ enum Species: String, Codable, CaseIterable {
     case cat = "Cat"
 }
 
-struct PetPass: Identifiable, Hashable {
-    enum VaccineStatus: String {
-        case green
-        case yellow
-        case red
-
-        var label: String {
-            switch self {
-            case .green: return "Ready"
-            case .yellow: return "Expiring Soon"
-            case .red: return "Needs Update"
-            }
-        }
-    }
-
+struct PetPass: Identifiable, Hashable, Codable {
     let id: UUID
-    let petName: String
-    let breed: String
-    let ageDescription: String
-    let vaccineStatus: VaccineStatus
+    var petName: String
+    var breed: String
+    var ageDescription: String
     var species: Species
 
     static let sample = PetPass(
@@ -32,13 +17,12 @@ struct PetPass: Identifiable, Hashable {
         petName: "Mochi",
         breed: "Mini Goldendoodle",
         ageDescription: "3 years",
-        vaccineStatus: .yellow,
         species: .dog
     )
 }
 
-struct VaultDocument: Identifiable, Hashable {
-    enum DocumentType: String {
+struct VaultDocument: Identifiable, Hashable, Codable {
+    enum DocumentType: String, Codable, CaseIterable {
         case medical = "Medical"
         case certificates = "Certificates"
         case identity = "Identity"
@@ -67,8 +51,6 @@ struct VaultDocument: Identifiable, Hashable {
 
 extension VaultDocument {
     /// Maps document titles to the canonical requirement key they satisfy.
-    /// This avoids brittle substring stripping — each document type explicitly
-    /// declares which requirement it fulfills.
     private static let titleToRequirementKey: [String: String] = [
         "rabies vaccination": "rabies",
         "rabies certificate": "rabies",
@@ -100,6 +82,12 @@ extension VaultDocument {
         guard let expiresOn else { return false }
         return expiresOn < Date()
     }
+
+    var isExpiringSoon: Bool {
+        guard let expiresOn, !isExpired else { return false }
+        let horizon = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
+        return expiresOn <= horizon
+    }
 }
 
 struct ShareActivityEvent: Identifiable, Hashable, Codable {
@@ -112,14 +100,31 @@ struct ShareActivityEvent: Identifiable, Hashable, Codable {
     let id: UUID
     let businessName: String
     let detail: String
-    let sentAtText: String
+    let sentAt: Date
     let status: Status
     let sharedDocumentTitles: [String]
     let shareDurationLabel: String
 
+    var sentAtText: String {
+        let cal = Calendar.current
+        let f = DateFormatter()
+        f.timeStyle = .short
+
+        if cal.isDateInToday(sentAt) {
+            return "Today, \(f.string(from: sentAt))"
+        } else if cal.isDateInYesterday(sentAt) {
+            return "Yesterday, \(f.string(from: sentAt))"
+        } else {
+            let df = DateFormatter()
+            df.dateStyle = .medium
+            df.timeStyle = .short
+            return df.string(from: sentAt)
+        }
+    }
+
     static let sampleEvents: [ShareActivityEvent] = [
-        .init(id: UUID(), businessName: "Canal Street Vet", detail: "Intro pack sent with rabies certificate", sentAtText: "Today, 2:14 PM", status: .sent, sharedDocumentTitles: ["Rabies Vaccination"], shareDurationLabel: "24 hours"),
-        .init(id: UUID(), businessName: "Pine & Paw Grooming", detail: "Business opened secure link", sentAtText: "Today, 10:31 AM", status: .opened, sharedDocumentTitles: ["Rabies Vaccination", "Bordetella Certificate"], shareDurationLabel: "7 days"),
-        .init(id: UUID(), businessName: "Happy Trails Boarding", detail: "Missing distemper vaccine proof", sentAtText: "Yesterday, 6:07 PM", status: .actionNeeded, sharedDocumentTitles: [], shareDurationLabel: "24 hours")
+        .init(id: UUID(), businessName: "Canal Street Vet", detail: "Intro pack sent with rabies certificate", sentAt: Date().addingTimeInterval(-3600), status: .sent, sharedDocumentTitles: ["Rabies Vaccination"], shareDurationLabel: "24 hours"),
+        .init(id: UUID(), businessName: "Pine & Paw Grooming", detail: "Business opened secure link", sentAt: Date().addingTimeInterval(-7200), status: .opened, sharedDocumentTitles: ["Rabies Vaccination", "Bordetella Certificate"], shareDurationLabel: "7 days"),
+        .init(id: UUID(), businessName: "Happy Trails Boarding", detail: "Missing distemper vaccine proof", sentAt: Date().addingTimeInterval(-86400), status: .actionNeeded, sharedDocumentTitles: [], shareDurationLabel: "24 hours")
     ]
 }

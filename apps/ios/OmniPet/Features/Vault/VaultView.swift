@@ -24,7 +24,7 @@ struct VaultView: View {
                             }
                         }
                         .pickerStyle(.segmented)
-                        Text(discoveryStore.petPass.vaccineStatus.label)
+                        Text(discoveryStore.vaccineStatus.label)
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -133,7 +133,7 @@ struct VaultView: View {
     }
 
     private var statusColor: Color {
-        switch discoveryStore.petPass.vaccineStatus {
+        switch discoveryStore.vaccineStatus {
         case .green: return OmniPetColor.emerald
         case .yellow: return OmniPetColor.warning
         case .red: return OmniPetColor.danger

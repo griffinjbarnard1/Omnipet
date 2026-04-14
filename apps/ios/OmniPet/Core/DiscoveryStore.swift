@@ -28,8 +28,12 @@ final class DiscoveryStore: ObservableObject {
     @Published private(set) var businesses: [BusinessProfile] = BusinessProfile.sample
     @Published private(set) var isLoading = false
     @Published private(set) var lastError: String?
-    @Published private(set) var petPass: PetPass = .sample
-    @Published private(set) var documents: [VaultDocument] = VaultDocument.sampleDocuments
+    @Published var petPass: PetPass = .sample {
+        didSet { VaultPersistence.savePetPass(petPass) }
+    }
+    @Published private(set) var documents: [VaultDocument] = VaultDocument.sampleDocuments {
+        didSet { VaultPersistence.saveDocuments(documents) }
+    }
     @Published private(set) var activityEvents: [ShareActivityEvent] = ShareActivityEvent.sampleEvents
     @Published private(set) var userLocation: CLLocation?
 
@@ -39,7 +43,6 @@ final class DiscoveryStore: ObservableObject {
     private static let queryKey = "omnipet.discovery.query"
     private static let categoryKey = "omnipet.discovery.category"
 
-    // Fallback center if the device hasn't reported a fix yet.
     private static let fallbackCenter = CLLocation(latitude: 40.7128, longitude: -74.0060)
 
     var filteredBusinesses: [BusinessProfile] {
@@ -54,6 +57,16 @@ final class DiscoveryStore: ObservableObject {
             }
     }
 
+    /// Computed vaccine status based on actual document state.
+    var vaccineStatus: VaccineStatus {
+        guard !documents.isEmpty else { return .red }
+        let hasExpired = documents.contains { $0.isExpired }
+        let hasExpiringSoon = documents.contains { $0.isExpiringSoon }
+        if hasExpired { return .red }
+        if hasExpiringSoon { return .yellow }
+        return .green
+    }
+
     init() {
         let defaults = UserDefaults.standard
         self.query = defaults.string(forKey: Self.queryKey) ?? ""
@@ -64,12 +77,17 @@ final class DiscoveryStore: ObservableObject {
             self.selectedCategory = nil
         }
 
-        // Restore persisted activity events; fall back to samples on first launch.
+        // Restore persisted vault data; fall back to samples on first launch.
+        if let storedPass = VaultPersistence.loadPetPass() {
+            self.petPass = storedPass
+        }
+        if let storedDocs = VaultPersistence.loadDocuments() {
+            self.documents = storedDocs
+        }
         if let stored = ActivityPersistence.load(), !stored.isEmpty {
             self.activityEvents = stored
         }
 
-        // Kick off a real location request; UI keeps working with the fallback.
         Task { [weak self] in
             guard let self else { return }
             let loc = await self.locationProvider.currentLocation()
@@ -244,7 +262,6 @@ final class DiscoveryStore: ObservableObject {
     }
 
     func availability(for business: BusinessProfile) -> RequirementAvailability {
-        // Expiration-aware match: a doc counts only if its title matches AND it isn't expired.
         let validTitles = Set(documents.filter { !$0.isExpired }.map(\.normalizedTitle))
         let expiredTitles = Set(documents.filter { $0.isExpired }.map(\.normalizedTitle))
 
@@ -256,8 +273,6 @@ final class DiscoveryStore: ObservableObject {
             if expiredTitles.contains(key) { expired.append(req) } else { missing.append(req) }
         }
 
-        // Vets typically *administer* the vaccines they check for — treat gaps
-        // as advisory instead of blocking the handshake.
         let isBlocking = business.category != .vet
         let ready = !isBlocking || (missing.isEmpty && expired.isEmpty)
 
@@ -298,7 +313,7 @@ final class DiscoveryStore: ObservableObject {
             id: UUID(),
             businessName: business.name,
             detail: parts.joined(separator: " "),
-            sentAtText: "Today, just now",
+            sentAt: Date(),
             status: availability.isReadyForCheckIn ? .sent : .actionNeeded,
             sharedDocumentTitles: resolvedTitles,
             shareDurationLabel: resolvedDuration
@@ -308,10 +323,20 @@ final class DiscoveryStore: ObservableObject {
     }
 
     var hasExpiringSoonDocuments: Bool {
-        let horizon = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
-        return documents.contains { doc in
-            guard let exp = doc.expiresOn else { return false }
-            return exp <= horizon
+        documents.contains { $0.isExpiringSoon || $0.isExpired }
+    }
+}
+
+// MARK: - Vaccine Status (computed, not stored)
+
+enum VaccineStatus: String {
+    case green, yellow, red
+
+    var label: String {
+        switch self {
+        case .green: return "Ready"
+        case .yellow: return "Expiring Soon"
+        case .red: return "Needs Update"
         }
     }
 }
@@ -323,14 +348,52 @@ struct RequirementAvailability: Hashable {
     let requirementsAreAdvisory: Bool
 }
 
-/// JSON-on-disk persistence for share activity events.
-/// Stored under Application Support/omnipet/activity.json so it survives
-/// launches but isn't backed up if the user opts out.
-enum ActivityPersistence {
-    private static let folderName = "omnipet"
-    private static let fileName = "activity.json"
+// MARK: - Persistence
 
-    private static func fileURL() -> URL? {
+enum ActivityPersistence {
+    private static var fileURL: URL? { OmniPetStorage.url(for: "activity.json") }
+
+    static func load() -> [ShareActivityEvent]? {
+        guard let url = fileURL, let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode([ShareActivityEvent].self, from: data)
+    }
+
+    static func save(_ events: [ShareActivityEvent]) {
+        guard let url = fileURL, let data = try? JSONEncoder().encode(events) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+}
+
+enum VaultPersistence {
+    private static var docsURL: URL? { OmniPetStorage.url(for: "documents.json") }
+    private static var petPassURL: URL? { OmniPetStorage.url(for: "petpass.json") }
+
+    static func loadDocuments() -> [VaultDocument]? {
+        guard let url = docsURL, let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode([VaultDocument].self, from: data)
+    }
+
+    static func saveDocuments(_ docs: [VaultDocument]) {
+        guard let url = docsURL, let data = try? JSONEncoder().encode(docs) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    static func loadPetPass() -> PetPass? {
+        guard let url = petPassURL, let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(PetPass.self, from: data)
+    }
+
+    static func savePetPass(_ pass: PetPass) {
+        guard let url = petPassURL, let data = try? JSONEncoder().encode(pass) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+}
+
+/// Shared storage directory under Application Support/omnipet/.
+enum OmniPetStorage {
+    private static let folderName = "omnipet"
+
+    static func url(for fileName: String) -> URL? {
         let fm = FileManager.default
         guard let base = try? fm.url(
             for: .applicationSupportDirectory,
@@ -343,16 +406,5 @@ enum ActivityPersistence {
             try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         }
         return dir.appendingPathComponent(fileName)
-    }
-
-    static func load() -> [ShareActivityEvent]? {
-        guard let url = fileURL(), let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode([ShareActivityEvent].self, from: data)
-    }
-
-    static func save(_ events: [ShareActivityEvent]) {
-        guard let url = fileURL() else { return }
-        guard let data = try? JSONEncoder().encode(events) else { return }
-        try? data.write(to: url, options: .atomic)
     }
 }
