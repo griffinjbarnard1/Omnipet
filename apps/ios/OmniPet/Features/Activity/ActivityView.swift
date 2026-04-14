@@ -5,25 +5,51 @@ struct ActivityView: View {
 
     var body: some View {
         NavigationStack {
-            List(discoveryStore.activityEvents) { event in
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(event.businessName)
-                            .font(.headline)
-                        Spacer()
-                        Text(event.status.rawValue)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(color(for: event.status))
+            if discoveryStore.activityEvents.isEmpty {
+                ContentUnavailableView(
+                    "No Activity Yet",
+                    systemImage: "paperplane",
+                    description: Text("Check in with a business via the Discovery tab to send your first Vault packet.")
+                )
+                .navigationTitle("Activity")
+            } else {
+                List {
+                    ForEach(discoveryStore.activityEvents) { event in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text(event.businessName)
+                                    .font(.headline)
+                                Spacer()
+                                Text(event.status.rawValue)
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(color(for: event.status).opacity(0.15), in: Capsule())
+                                    .foregroundStyle(color(for: event.status))
+                                    .accessibilityLabel("Status: \(event.status.rawValue)")
+                            }
+                            Text(event.detail)
+                                .font(.subheadline)
+                            if !event.sharedDocumentTitles.isEmpty {
+                                Text("Shared: \(event.sharedDocumentTitles.joined(separator: ", "))")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Text("Access: \(event.shareDurationLabel)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(event.sentAtText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 4)
                     }
-                    Text(event.detail)
-                        .font(.subheadline)
-                    Text(event.sentAtText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    .onDelete { offsets in
+                        discoveryStore.deleteActivityEvent(at: offsets)
+                    }
                 }
-                .padding(.vertical, 4)
+                .navigationTitle("Activity")
             }
-            .navigationTitle("Activity")
         }
     }
 
