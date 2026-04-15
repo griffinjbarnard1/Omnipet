@@ -6,10 +6,31 @@ struct SettingsView: View {
     @State private var showClearActivityConfirm = false
     @State private var showClearDocumentsConfirm = false
     @State private var showResetAllConfirm = false
+    @State private var draftEmail = ""
 
     var body: some View {
         NavigationStack {
             List {
+                Section("Account") {
+                    TextField("Email", text: $draftEmail)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .onSubmit {
+                            let trimmed = draftEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmed.isEmpty else { return }
+                            discoveryStore.updateAccountEmail(trimmed)
+                        }
+
+                    Toggle("Cloud Sync (simulated)", isOn: Binding(
+                        get: { discoveryStore.cloudSyncEnabled },
+                        set: {
+                            discoveryStore.setCloudSyncEnabled($0)
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        }
+                    ))
+                }
+
                 Section("Pet") {
                     HStack {
                         Image(systemName: discoveryStore.petPass.species == .dog ? "dog.fill" : "cat.fill")
@@ -110,16 +131,17 @@ struct SettingsView: View {
             }
             .confirmationDialog("Reset Everything?", isPresented: $showResetAllConfirm, titleVisibility: .visible) {
                 Button("Reset Everything", role: .destructive) {
-                    discoveryStore.clearDocuments()
-                    discoveryStore.clearActivityEvents()
-                    discoveryStore.clearFavorites()
-                    discoveryStore.updatePetPass(.sample)
+                    discoveryStore.resetEverything()
                     UserDefaults.standard.set(false, forKey: "omnipet.onboarding.completed")
+                    draftEmail = discoveryStore.accountEmail
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This will delete all documents, activity, favorites, and reset your pet pass. This cannot be undone.")
             }
+        }
+        .onAppear {
+            draftEmail = discoveryStore.accountEmail
         }
     }
 }

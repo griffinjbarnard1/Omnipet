@@ -26,6 +26,7 @@ struct DiscoveryView: View {
                 case .map: mapContent
                 }
             }
+            .animation(.spring(response: 0.38, dampingFraction: 0.9), value: viewMode)
             .safeAreaInset(edge: .top, spacing: 0) {
                 Picker("View", selection: $viewMode) {
                     ForEach(ViewMode.allCases, id: \.self) { mode in
@@ -33,6 +34,9 @@ struct DiscoveryView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .onChange(of: viewMode) { _, _ in
+                    UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+                }
                 .padding(.horizontal)
                 .padding(.vertical, 8)
                 .background(.bar)
@@ -297,7 +301,10 @@ struct DiscoveryView: View {
                     .stroke(isSelected ? OmniPetColor.emerald : .clear, lineWidth: 1)
             }
             .onTapGesture {
-                discoveryStore.selectedCategory = discoveryStore.selectedCategory == category ? nil : category
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                    discoveryStore.selectedCategory = discoveryStore.selectedCategory == category ? nil : category
+                }
+                UISelectionFeedbackGenerator().selectionChanged()
             }
     }
 
