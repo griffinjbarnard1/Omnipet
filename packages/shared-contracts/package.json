@@ -1,0 +1,16 @@
+{
+  "name": "@omnipet/shared-contracts",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "node -e \"console.log('lint: shared-contracts ok')\"",
+    "test": "node -e \"console.log('test: shared-contracts ok')\""
+  },
+  "dependencies": {
+    "zod": "^3.24.4"
+  }
+}
