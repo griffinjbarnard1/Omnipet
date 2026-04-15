@@ -1,0 +1,21 @@
+{
+  "name": "@omnipet/search-logistics",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "node -e \"console.log('lint: search-logistics ok')\"",
+    "test": "node -e \"console.log('test: search-logistics ok')\""
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "@omnipet/shared-contracts": "workspace:*",
+    "fastify": "^5.3.3",
+    "nanoid": "^5.1.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3"
+  }
+}

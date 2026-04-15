@@ -283,3 +283,58 @@ Until those services exist, check-in/sharing remains a prototype simulation.
 - Make consent explicit and revocation understandable.
 - Keep status legible: what was shared, with whom, and when.
 - Reward complete Vault records with materially faster onboarding.
+
+---
+
+## Backend Monorepo Implementation (April 2026)
+
+A production-oriented backend scaffold now exists in this repo as a TypeScript monorepo:
+
+- **Runtime/API:** Fastify 5 (high throughput, low overhead)
+- **Language:** TypeScript with strict compile settings
+- **Workspace tooling:** `pnpm` workspaces for efficient installs and builds
+- **Shared schemas:** `zod` contracts in `@omnipet/shared-contracts`
+
+### Service ports
+- `search-logistics`: `4010`
+- `business-ingestion`: `4020`
+- `vault-share`: `4030`
+
+### Run locally
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter @omnipet/search-logistics dev
+pnpm --filter @omnipet/business-ingestion dev
+pnpm --filter @omnipet/vault-share dev
+```
+
+### Example API calls
+
+```bash
+curl "http://localhost:4010/v1/search?query=vet&limit=5"
+
+curl -X POST "http://localhost:4020/v1/ingestion/business" \
+  -H "content-type: application/json" \
+  -d '{
+    "source": "google",
+    "externalId": "g_123",
+    "name": "Happy Tail Daycare",
+    "category": "daycare",
+    "address": "200 Main St, Austin, TX",
+    "lat": 30.2672,
+    "lng": -97.7431
+  }'
+
+curl -X POST "http://localhost:4030/v1/share-pack" \
+  -H "content-type: application/json" \
+  -d '{
+    "ownerId": "owner_1",
+    "petId": "pet_1",
+    "businessId": "biz_1",
+    "delivery": "secure_link",
+    "consentTtlHours": 24,
+    "documentIds": ["doc_1"]
+  }'
+```
