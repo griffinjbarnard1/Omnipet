@@ -18,6 +18,18 @@ struct BusinessProfileView: View {
 
     let business: BusinessProfile
 
+    private var pastHandshakes: [ShareActivityEvent] {
+        discoveryStore.activityEvents.filter { $0.businessName == business.name }
+    }
+
+    private func statusColor(for status: ShareActivityEvent.Status) -> Color {
+        switch status {
+        case .sent: return OmniPetColor.grayPin
+        case .opened: return OmniPetColor.emerald
+        case .actionNeeded: return OmniPetColor.danger
+        }
+    }
+
     var body: some View {
         let availability = discoveryStore.availability(for: business)
         List {
@@ -81,6 +93,31 @@ struct BusinessProfileView: View {
                 }
             }
 
+            if !pastHandshakes.isEmpty {
+                Section("Past Handshakes") {
+                    ForEach(pastHandshakes) { event in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(event.status.rawValue)
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(statusColor(for: event.status).opacity(0.15), in: Capsule())
+                                    .foregroundStyle(statusColor(for: event.status))
+                                Spacer()
+                                Text(event.sentAtText)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Text(event.detail)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                    }
+                }
+            }
+
             Section("Handshake") {
                 Button("Check-In with Vault") {
                     isShowingConsentSheet = true
@@ -106,6 +143,7 @@ struct BusinessProfileView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     discoveryStore.toggleFavorite(business.name)
                 } label: {
                     Image(systemName: discoveryStore.isFavorite(business.name) ? "star.fill" : "star")
@@ -134,6 +172,7 @@ struct BusinessProfileView: View {
                     shareDurationLabel: durationLabel
                 )
                 isShowingConsentSheet = false
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
                 didShowCheckInConfirmation = true
             } onCancel: {
                 isShowingConsentSheet = false

@@ -52,7 +52,7 @@ struct DiscoveryView: View {
                         Button {
                             selectedBusiness = business
                         } label: {
-                            Image(systemName: "mappin.circle.fill")
+                            Image(systemName: mapPinIcon(for: business.category))
                                 .font(.title)
                                 .foregroundStyle(business.partnershipStatus == .partner ? OmniPetColor.emerald : OmniPetColor.grayPin)
                                 .shadow(radius: 2)
@@ -75,15 +75,26 @@ struct DiscoveryView: View {
     private var listContent: some View {
         List {
                 Section {
-                    TextField(
-                        "Search vets, daycare, grooming, boarding, pet sitters…",
-                        text: Binding(
-                            get: { discoveryStore.query },
-                            set: { discoveryStore.updateQuery($0) }
+                    HStack {
+                        TextField(
+                            "Search vets, daycare, grooming, boarding, pet sitters…",
+                            text: Binding(
+                                get: { discoveryStore.query },
+                                set: { discoveryStore.updateQuery($0) }
+                            )
                         )
-                    )
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                        if !discoveryStore.query.isEmpty {
+                            Button {
+                                discoveryStore.updateQuery("")
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
 
                 Section("Categories") {
@@ -151,7 +162,7 @@ struct DiscoveryView: View {
                     }
                 }
 
-                Section("Nearby Businesses (\(discoveryStore.filteredBusinesses.count))") {
+                Section(discoveryStore.isLoading ? "Nearby Businesses" : "Nearby Businesses (\(discoveryStore.filteredBusinesses.count))") {
                     if discoveryStore.isLoading {
                         HStack(spacing: 8) {
                             ProgressView()
@@ -252,6 +263,15 @@ struct DiscoveryView: View {
             .onTapGesture {
                 discoveryStore.selectedCategory = discoveryStore.selectedCategory == category ? nil : category
             }
+    }
+
+    private func mapPinIcon(for category: BusinessProfile.Category) -> String {
+        switch category {
+        case .vet: return "cross.circle.fill"
+        case .daycare: return "figure.2.and.child.holdinghands.circle.fill"
+        case .grooming: return "scissors.circle.fill"
+        case .boarding: return "house.circle.fill"
+        }
     }
 
     private func recenterMap() {

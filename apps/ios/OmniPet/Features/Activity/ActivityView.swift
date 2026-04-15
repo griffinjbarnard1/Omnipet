@@ -117,7 +117,7 @@ struct ActivityDetailView: View {
                 }
             }
         }
-        .navigationTitle("Handshake Detail")
+        .navigationTitle(event.businessName)
         .navigationBarTitleDisplayMode(.inline)
     }
 
