@@ -209,13 +209,13 @@ figma/
 
 ### 🚫 Missing (known gaps)
 
-- No production backend/API wiring
-- No cloud sync or accounts
-- No multi-pet support
-- No real business inbox/portal for shared packets
-- No notification pipeline (expiration reminders, status push updates)
-- No search history/recent queries UX
-- No reviews/ratings, scheduling, or messaging layer
+- No production backend/API wiring (now replaced with an in-app backend simulator and contract-ready activity metadata)
+- Cloud sync and account management are scaffolded locally with persistence hooks; production identity is still pending
+- Multi-pet support now ships in Vault/Activity with active-pet switching
+- Business inbox handoff is now simulated via a local business inbox actor; production portal is still pending
+- Notification pipeline now includes local reminders for expiring records and local status pushes
+- Search history/recent queries are now persisted and surfaced in Discover
+- Reviews/ratings plus basic scheduling/messaging actions now exist in Business Profile
 
 ### Backend blocker (current highest-priority constraint)
 

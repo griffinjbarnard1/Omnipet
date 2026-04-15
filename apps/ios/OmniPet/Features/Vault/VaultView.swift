@@ -9,6 +9,7 @@ struct VaultView: View {
     @State private var isPresentingEditPetPass = false
     @State private var editingDocument: VaultDocument?
     @State private var scannedImages: [UIImage] = []
+    @State private var isPresentingAddPet = false
 
     private var scannerAvailable: Bool {
         VNDocumentCameraViewController.isSupported
@@ -27,7 +28,23 @@ struct VaultView: View {
                     .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
                 }
 
-                if discoveryStore.documents.isEmpty {
+                Section("Pets") {
+                    Picker("Active Pet", selection: Binding(
+                        get: { discoveryStore.selectedPetID },
+                        set: { discoveryStore.selectPet($0) }
+                    )) {
+                        ForEach(discoveryStore.pets) { pet in
+                            Text(pet.pass.petName).tag(pet.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    Button("Add Another Pet") {
+                        isPresentingAddPet = true
+                    }
+                }
+
+                if discoveryStore.selectedPetDocuments.isEmpty {
                     Section {
                         VStack(spacing: 8) {
                             Text("No documents yet")
@@ -101,7 +118,7 @@ struct VaultView: View {
                         isPresentingSendRecords = true
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(discoveryStore.documents.isEmpty)
+                    .disabled(discoveryStore.selectedPetDocuments.isEmpty)
                 }
                 .padding()
                 .background(.ultraThinMaterial)
@@ -143,10 +160,18 @@ struct VaultView: View {
                     isPresentingEditPetPass = false
                 }
             }
+            .sheet(isPresented: $isPresentingAddPet) {
+                AddPetSheet { pass in
+                    discoveryStore.addPet(pass)
+                    isPresentingAddPet = false
+                } onCancel: {
+                    isPresentingAddPet = false
+                }
+            }
             .sheet(isPresented: $isPresentingSendRecords) {
                 SendRecordsSheet(
                     petName: discoveryStore.petPass.petName,
-                    documents: discoveryStore.documents
+                    documents: discoveryStore.selectedPetDocuments
                 ) {
                     isPresentingSendRecords = false
                 }
@@ -160,7 +185,7 @@ struct VaultView: View {
     }
 
     private var documentGroups: [DocumentGroup] {
-        let grouped = Dictionary(grouping: discoveryStore.documents, by: \.type)
+        let grouped = Dictionary(grouping: discoveryStore.selectedPetDocuments, by: \.type)
         return VaultDocument.DocumentType.allCases.compactMap { type in
             guard let docs = grouped[type], !docs.isEmpty else { return nil }
             return DocumentGroup(type: type, documents: docs)
@@ -170,7 +195,7 @@ struct VaultView: View {
     private func deleteDocuments(in group: DocumentGroup, at offsets: IndexSet) {
         let idsToDelete = offsets.map { group.documents[$0].id }
         for id in idsToDelete {
-            if let idx = discoveryStore.documents.firstIndex(where: { $0.id == id }) {
+            if let idx = discoveryStore.selectedPetDocuments.firstIndex(where: { $0.id == id }) {
                 discoveryStore.deleteDocument(at: IndexSet(integer: idx))
             }
         }
@@ -277,6 +302,7 @@ struct VaultView: View {
 // MARK: - Add Document Sheet
 
 struct AddDocumentSheet: View {
+    @EnvironmentObject private var discoveryStore: DiscoveryStore
     let scannedPageCount: Int
     let onAdd: (VaultDocument) -> Void
     let onCancel: () -> Void
@@ -349,6 +375,7 @@ struct AddDocumentSheet: View {
                     Button("Add Document") {
                         let doc = VaultDocument(
                             id: UUID(),
+                            petID: discoveryStore.selectedPetID,
                             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                             type: type,
                             expiresOn: hasExpiration ? expirationDate : nil
@@ -425,6 +452,7 @@ struct EditDocumentSheet: View {
                     Button("Save Changes") {
                         let updated = VaultDocument(
                             id: document.id,
+                            petID: document.petID,
                             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                             type: type,
                             expiresOn: hasExpiration ? expirationDate : nil
@@ -576,6 +604,38 @@ struct SendRecordsSheet: View {
                     Button("Done", action: onDismiss)
                 }
             }
+        }
+    }
+}
+
+
+struct AddPetSheet: View {
+    let onSave: (PetPass) -> Void
+    let onCancel: () -> Void
+
+    @State private var petName = ""
+    @State private var breed = ""
+    @State private var age = ""
+    @State private var species: Species = .dog
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("Pet name", text: $petName)
+                TextField("Breed", text: $breed)
+                TextField("Age", text: $age)
+                Picker("Species", selection: $species) {
+                    ForEach(Species.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+
+                Button("Add Pet") {
+                    onSave(.init(id: UUID(), petName: petName, breed: breed, ageDescription: age, species: species))
+                }
+                .disabled(petName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .navigationTitle("Add Pet")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: onCancel) } }
         }
     }
 }

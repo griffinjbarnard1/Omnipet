@@ -28,15 +28,21 @@ struct SettingsView: View {
 
                 Section("Data") {
                     HStack {
-                        Text("Documents")
+                        Text("Pets")
                         Spacer()
-                        Text("\(discoveryStore.documents.count)")
+                        Text("\(discoveryStore.pets.count)")
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Text("Documents (active pet)")
+                        Spacer()
+                        Text("\(discoveryStore.selectedPetDocuments.count)")
                             .foregroundStyle(.secondary)
                     }
                     HStack {
                         Text("Activity Events")
                         Spacer()
-                        Text("\(discoveryStore.activityEvents.count)")
+                        Text("\(discoveryStore.selectedPetActivity.count)")
                             .foregroundStyle(.secondary)
                     }
                     HStack {
@@ -54,11 +60,11 @@ struct SettingsView: View {
                     Button("Clear Activity History", role: .destructive) {
                         showClearActivityConfirm = true
                     }
-                    .disabled(discoveryStore.activityEvents.isEmpty)
+                    .disabled(discoveryStore.selectedPetActivity.isEmpty)
                     Button("Clear All Documents", role: .destructive) {
                         showClearDocumentsConfirm = true
                     }
-                    .disabled(discoveryStore.documents.isEmpty)
+                    .disabled(discoveryStore.selectedPetDocuments.isEmpty)
                 }
 
                 Section("Danger Zone") {
