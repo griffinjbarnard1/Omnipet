@@ -289,6 +289,8 @@ final class DiscoveryStore: ObservableObject {
     func clearActivityEvents() { activityEvents.removeAll { $0.petID == selectedPetID } }
     func clearDocuments() { documents.removeAll { $0.petID == selectedPetID } }
     func clearFavorites() { favoriteBusinessNames.removeAll() }
+    func setCloudSyncEnabled(_ enabled: Bool) { cloudSyncEnabled = enabled }
+    func updateAccountEmail(_ email: String) { accountEmail = email }
 
     func toggleFavorite(_ businessName: String) {
         if favoriteBusinessNames.contains(businessName) { favoriteBusinessNames.remove(businessName) }
@@ -407,6 +409,17 @@ final class DiscoveryStore: ObservableObject {
         searchHistory.removeAll { $0.query.lowercased() == trimmed.lowercased() }
         searchHistory.insert(.init(id: UUID(), query: trimmed, createdAt: Date()), at: 0)
         searchHistory = Array(searchHistory.prefix(30))
+    }
+
+    func resetEverything() {
+        documents.removeAll()
+        activityEvents.removeAll()
+        favoriteBusinessNames.removeAll()
+        searchHistory.removeAll()
+        pets = [.init(pass: .sample)]
+        selectedPetID = pets[0].id
+        cloudSyncEnabled = true
+        accountEmail = "owner@omnipet.app"
     }
 }
 

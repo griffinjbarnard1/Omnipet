@@ -187,6 +187,8 @@ figma/
   - Grouping by type (Medical, Certificates, Identity, Diet)
   - Expiration state tracking (expired / expiring soon / valid)
   - Pet pass card UI and local JSON persistence
+  - Quick Pass QR surface for front-desk check-in
+  - Multi-pet controls with active-pet remove flow
 - **Activity tab**
   - Local check-in event history with statuses (Sent, Opened, Action Needed)
   - Detail views, relative timestamps, swipe-to-delete
@@ -197,6 +199,7 @@ figma/
 - **Settings & onboarding**
   - Onboarding flow and single-pet setup
   - Local data stats and reset/replay controls
+  - Account email editing + simulated cloud-sync toggle
 - **Persistence layer**
   - Local JSON files for pet pass, documents, activity, and favorites
   - `UserDefaults` for onboarding/search state

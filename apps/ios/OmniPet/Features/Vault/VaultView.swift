@@ -1,5 +1,6 @@
 import SwiftUI
 import VisionKit
+import CoreImage.CIFilterBuiltins
 
 struct VaultView: View {
     @EnvironmentObject private var discoveryStore: DiscoveryStore
@@ -7,9 +8,11 @@ struct VaultView: View {
     @State private var isPresentingAddDocument = false
     @State private var isPresentingSendRecords = false
     @State private var isPresentingEditPetPass = false
+    @State private var isPresentingQuickPass = false
     @State private var editingDocument: VaultDocument?
     @State private var scannedImages: [UIImage] = []
     @State private var isPresentingAddPet = false
+    @State private var pendingPetRemoval: PetProfile?
 
     private var scannerAvailable: Bool {
         VNDocumentCameraViewController.isSupported
@@ -41,6 +44,12 @@ struct VaultView: View {
 
                     Button("Add Another Pet") {
                         isPresentingAddPet = true
+                    }
+
+                    if discoveryStore.pets.count > 1 {
+                        Button("Remove Active Pet", role: .destructive) {
+                            pendingPetRemoval = discoveryStore.selectedPet
+                        }
                     }
                 }
 
@@ -102,6 +111,13 @@ struct VaultView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 HStack {
+                    Button {
+                        isPresentingQuickPass = true
+                    } label: {
+                        Label("Quick Pass", systemImage: "qrcode")
+                    }
+                    .buttonStyle(.borderedProminent)
+
                     Button {
                         if scannerAvailable {
                             isPresentingScanner = true
@@ -174,6 +190,32 @@ struct VaultView: View {
                     documents: discoveryStore.selectedPetDocuments
                 ) {
                     isPresentingSendRecords = false
+                }
+            }
+            .sheet(isPresented: $isPresentingQuickPass) {
+                QuickPassSheet(
+                    petPass: discoveryStore.petPass,
+                    vaccineStatus: discoveryStore.vaccineStatus,
+                    documents: discoveryStore.selectedPetDocuments
+                ) {
+                    isPresentingQuickPass = false
+                }
+            }
+            .confirmationDialog("Remove this pet?", isPresented: Binding(
+                get: { pendingPetRemoval != nil },
+                set: { if !$0 { pendingPetRemoval = nil } }
+            ), titleVisibility: .visible) {
+                Button("Remove Pet", role: .destructive) {
+                    guard let pet = pendingPetRemoval else { return }
+                    discoveryStore.removePet(pet.id)
+                    pendingPetRemoval = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    pendingPetRemoval = nil
+                }
+            } message: {
+                if let pet = pendingPetRemoval {
+                    Text("This removes \(pet.pass.petName), their documents, and activity history.")
                 }
             }
         }
@@ -638,4 +680,86 @@ struct AddPetSheet: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: onCancel) } }
         }
     }
+}
+
+struct QuickPassSheet: View {
+    let petPass: PetPass
+    let vaccineStatus: VaccineStatus
+    let documents: [VaultDocument]
+    let onDismiss: () -> Void
+
+    private let context = CIContext()
+    private let filter = CIFilter.qrCodeGenerator()
+
+    private var payload: String {
+        let expiry = documents
+            .compactMap(\.expiresOn)
+            .sorted()
+            .first
+            .map { QuickPassSheet.dateFormatter.string(from: $0) } ?? "n/a"
+        return "omnipet://quick-pass?pet=\(petPass.petName)&species=\(petPass.species.rawValue)&status=\(vaccineStatus.label)&docs=\(documents.count)&nextExpiry=\(expiry)"
+    }
+
+    private var qrImage: Image? {
+        filter.message = Data(payload.utf8)
+        guard let output = filter.outputImage else { return nil }
+        let transformed = output.transformed(by: CGAffineTransform(scaleX: 8, y: 8))
+        guard let cgImage = context.createCGImage(transformed, from: transformed.extent) else { return nil }
+        return Image(uiImage: UIImage(cgImage: cgImage))
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text("Quick Pass")
+                    .font(.title2.bold())
+                Text("Front-desk friendly QR for \(petPass.petName).")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Group {
+                    if let qrImage {
+                        qrImage
+                            .interpolation(.none)
+                            .resizable()
+                    } else {
+                        Image(systemName: "qrcode")
+                            .resizable()
+                    }
+                }
+                .frame(width: 220, height: 220)
+                .padding()
+                .background(.white, in: RoundedRectangle(cornerRadius: 20))
+                .shadow(radius: 8)
+
+                Label("Status: \(vaccineStatus.label)", systemImage: "checkmark.shield")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(OmniPetColor.emerald)
+                Text("Shared profile includes \(documents.count) document(s).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+            }
+            .padding()
+            .background(
+                LinearGradient(
+                    colors: [OmniPetColor.emerald.opacity(0.2), .clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", action: onDismiss)
+                }
+            }
+        }
+    }
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter
+    }()
 }
