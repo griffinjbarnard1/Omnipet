@@ -109,22 +109,36 @@ struct DiscoveryView: View {
                     }
                 }
 
-                Section("Care Handshake") {
-                    flowStageChip(
-                        title: "Find",
-                        detail: "Search nearby pet services by category or natural language.",
-                        symbol: "magnifyingglass"
-                    )
-                    flowStageChip(
-                        title: "Prepare",
-                        detail: "Review requirements and fix any missing records in Vault.",
-                        symbol: "checklist"
-                    )
-                    flowStageChip(
-                        title: "Share",
-                        detail: "Check-in with Vault to send a professional packet.",
-                        symbol: "paperplane"
-                    )
+                if !discoveryStore.hasCompletedCheckIn {
+                    Section("Care Handshake") {
+                        flowStageChip(
+                            title: "Find",
+                            detail: "Search nearby pet services by category or natural language.",
+                            symbol: "magnifyingglass"
+                        )
+                        flowStageChip(
+                            title: "Prepare",
+                            detail: "Review requirements and fix any missing records in Vault.",
+                            symbol: "checklist"
+                        )
+                        flowStageChip(
+                            title: "Share",
+                            detail: "Check-in with Vault to send a professional packet.",
+                            symbol: "paperplane"
+                        )
+                    }
+                }
+
+                if !discoveryStore.favoriteBusinesses.isEmpty {
+                    Section("Favorites") {
+                        ForEach(discoveryStore.favoriteBusinesses) { business in
+                            Button {
+                                selectedBusiness = business
+                            } label: {
+                                businessRow(business)
+                            }
+                        }
+                    }
                 }
 
                 if discoveryStore.lastError != nil {
@@ -156,39 +170,7 @@ struct DiscoveryView: View {
                         Button {
                             selectedBusiness = business
                         } label: {
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack {
-                                    Text(business.name)
-                                        .font(.headline)
-                                    Spacer()
-                                    Text("\(business.distanceMiles, specifier: "%.1f") mi")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                HStack(spacing: 6) {
-                                    Text(business.category.rawValue)
-                                        .font(.caption2.weight(.semibold))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(OmniPetColor.emerald.opacity(0.15), in: Capsule())
-                                        .foregroundStyle(OmniPetColor.emerald)
-                                    if business.listingType == .individual {
-                                        Text("Individual")
-                                            .font(.caption2.weight(.semibold))
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(OmniPetColor.warning.opacity(0.15), in: Capsule())
-                                            .foregroundStyle(OmniPetColor.warning)
-                                    }
-                                }
-                                Text(business.summary)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                Label(business.partnershipStatus.label, systemImage: business.partnershipStatus == .partner ? "checkmark.seal.fill" : "mappin")
-                                    .font(.caption)
-                                    .foregroundStyle(business.partnershipStatus == .partner ? OmniPetColor.emerald : OmniPetColor.grayPin)
-                            }
-                            .padding(.vertical, 4)
+                            businessRow(business)
                         }
                     }
                 }
@@ -196,6 +178,64 @@ struct DiscoveryView: View {
         .refreshable {
             discoveryStore.refreshNow()
         }
+    }
+
+    private func businessRow(_ business: BusinessProfile) -> some View {
+        let availability = discoveryStore.availability(for: business)
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(business.name)
+                    .font(.headline)
+                if discoveryStore.isFavorite(business.name) {
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(OmniPetColor.warning)
+                }
+                Spacer()
+                Text("\(business.distanceMiles, specifier: "%.1f") mi")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            HStack(spacing: 6) {
+                Text(business.category.rawValue)
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(OmniPetColor.emerald.opacity(0.15), in: Capsule())
+                    .foregroundStyle(OmniPetColor.emerald)
+                if business.listingType == .individual {
+                    Text("Individual")
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(OmniPetColor.warning.opacity(0.15), in: Capsule())
+                        .foregroundStyle(OmniPetColor.warning)
+                }
+                Spacer()
+                if availability.isReadyForCheckIn {
+                    Label("Ready", systemImage: "checkmark.circle.fill")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(OmniPetColor.emerald)
+                } else if availability.requirementsAreAdvisory {
+                    Label("Advisory", systemImage: "info.circle.fill")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                } else {
+                    let gapCount = availability.missingRequirements.count + availability.expiredRequirements.count
+                    Label("\(gapCount) gap\(gapCount == 1 ? "" : "s")", systemImage: "exclamationmark.circle.fill")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(OmniPetColor.danger)
+                }
+            }
+            Text(business.summary)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            Label(business.partnershipStatus.label, systemImage: business.partnershipStatus == .partner ? "checkmark.seal.fill" : "mappin")
+                .font(.caption)
+                .foregroundStyle(business.partnershipStatus == .partner ? OmniPetColor.emerald : OmniPetColor.grayPin)
+        }
+        .padding(.vertical, 4)
     }
 
     private func categoryTag(label: String, symbol: String, category: BusinessProfile.Category) -> some View {

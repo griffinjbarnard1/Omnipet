@@ -103,6 +103,16 @@ struct BusinessProfileView: View {
             }
         }
         .navigationTitle("Business Profile")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    discoveryStore.toggleFavorite(business.name)
+                } label: {
+                    Image(systemName: discoveryStore.isFavorite(business.name) ? "star.fill" : "star")
+                        .foregroundStyle(discoveryStore.isFavorite(business.name) ? OmniPetColor.warning : .secondary)
+                }
+            }
+        }
         .alert("Check-in sent", isPresented: $didShowCheckInConfirmation) {
             Button("View in Activity") {
                 discoveryStore.selectedTab = .activity
@@ -222,6 +232,11 @@ struct ShareConsentSheet: View {
                 }
 
                 Section("Documents to share") {
+                    if business.category == .vet {
+                        Label("Vet requirements are advisory — you can share what you have. The clinic will handle the rest.", systemImage: "info.circle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     if requiredDocuments.isEmpty {
                         Text("No matching required documents in Vault.")
                             .font(.caption)

@@ -36,6 +36,9 @@ final class DiscoveryStore: ObservableObject {
     }
     @Published private(set) var activityEvents: [ShareActivityEvent] = ShareActivityEvent.sampleEvents
     @Published private(set) var userLocation: CLLocation?
+    @Published var favoriteBusinessNames: Set<String> = [] {
+        didSet { FavoritesPersistence.save(favoriteBusinessNames) }
+    }
 
     private var searchTask: Task<Void, Never>?
     private let locationProvider = LocationProvider()
@@ -87,6 +90,7 @@ final class DiscoveryStore: ObservableObject {
         if let stored = ActivityPersistence.load(), !stored.isEmpty {
             self.activityEvents = stored
         }
+        self.favoriteBusinessNames = FavoritesPersistence.load()
 
         Task { [weak self] in
             guard let self else { return }
@@ -264,6 +268,27 @@ final class DiscoveryStore: ObservableObject {
         ActivityPersistence.save(activityEvents)
     }
 
+    func toggleFavorite(_ businessName: String) {
+        if favoriteBusinessNames.contains(businessName) {
+            favoriteBusinessNames.remove(businessName)
+        } else {
+            favoriteBusinessNames.insert(businessName)
+        }
+    }
+
+    func isFavorite(_ businessName: String) -> Bool {
+        favoriteBusinessNames.contains(businessName)
+    }
+
+    var favoriteBusinesses: [BusinessProfile] {
+        filteredBusinesses.filter { favoriteBusinessNames.contains($0.name) }
+    }
+
+    var hasCompletedCheckIn: Bool {
+        // True if user has ever done a check-in (not just sample data on first launch)
+        activityEvents.contains { $0.detail.contains("Care Handshake") }
+    }
+
     private func inferCategory(from string: String) -> BusinessProfile.Category? {
         if string.contains("vet") || string.contains("veterinar") || string.contains("animal hospital") { return .vet }
         if string.contains("daycare") { return .daycare }
@@ -396,6 +421,21 @@ enum VaultPersistence {
 
     static func savePetPass(_ pass: PetPass) {
         guard let url = petPassURL, let data = try? JSONEncoder().encode(pass) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+}
+
+enum FavoritesPersistence {
+    private static var fileURL: URL? { OmniPetStorage.url(for: "favorites.json") }
+
+    static func load() -> Set<String> {
+        guard let url = fileURL, let data = try? Data(contentsOf: url),
+              let names = try? JSONDecoder().decode(Set<String>.self, from: data) else { return [] }
+        return names
+    }
+
+    static func save(_ names: Set<String>) {
+        guard let url = fileURL, let data = try? JSONEncoder().encode(names) else { return }
         try? data.write(to: url, options: .atomic)
     }
 }
