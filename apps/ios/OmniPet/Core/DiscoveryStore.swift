@@ -268,6 +268,19 @@ final class DiscoveryStore: ObservableObject {
         ActivityPersistence.save(activityEvents)
     }
 
+    func clearActivityEvents() {
+        activityEvents.removeAll()
+        ActivityPersistence.save(activityEvents)
+    }
+
+    func clearDocuments() {
+        documents.removeAll()
+    }
+
+    func clearFavorites() {
+        favoriteBusinessNames.removeAll()
+    }
+
     func toggleFavorite(_ businessName: String) {
         if favoriteBusinessNames.contains(businessName) {
             favoriteBusinessNames.remove(businessName)

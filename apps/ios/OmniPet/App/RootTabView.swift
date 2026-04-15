@@ -28,6 +28,12 @@ struct RootTabView: View {
                     Label("Activity", systemImage: "clock.arrow.circlepath")
                 }
                 .badge(actionNeededCount > 0 ? actionNeededCount : 0)
+
+            SettingsView()
+                .tag(AppTab.settings)
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
         }
         .onAppear {
             if !UserDefaults.standard.bool(forKey: "omnipet.onboarding.completed") {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ActivityView: View {
     @EnvironmentObject private var discoveryStore: DiscoveryStore
+    @State private var pendingDeleteOffsets: IndexSet?
 
     var body: some View {
         NavigationStack {
@@ -40,12 +41,26 @@ struct ActivityView: View {
                         }
                     }
                     .onDelete { offsets in
-                        discoveryStore.deleteActivityEvent(at: offsets)
+                        pendingDeleteOffsets = offsets
                     }
                 }
                 .navigationTitle("Activity")
                 .navigationDestination(for: ShareActivityEvent.self) { event in
                     ActivityDetailView(event: event)
+                }
+                .confirmationDialog("Delete this activity?", isPresented: Binding(
+                    get: { pendingDeleteOffsets != nil },
+                    set: { if !$0 { pendingDeleteOffsets = nil } }
+                ), titleVisibility: .visible) {
+                    Button("Delete", role: .destructive) {
+                        if let offsets = pendingDeleteOffsets {
+                            discoveryStore.deleteActivityEvent(at: offsets)
+                        }
+                        pendingDeleteOffsets = nil
+                    }
+                    Button("Cancel", role: .cancel) {
+                        pendingDeleteOffsets = nil
+                    }
                 }
             }
         }

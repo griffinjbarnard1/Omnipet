@@ -17,43 +17,18 @@ struct VaultView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Pet Pass") {
+                Section {
                     Button {
                         isPresentingEditPetPass = true
                     } label: {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text(discoveryStore.petPass.petName)
-                                    .font(.title3.bold())
-                                Spacer()
-                                Image(systemName: "pencil.circle")
-                                    .foregroundStyle(.secondary)
-                            }
-                            Text("\(discoveryStore.petPass.breed) · \(discoveryStore.petPass.ageDescription)")
-                                .foregroundStyle(.secondary)
-                            Picker("Species", selection: Binding(
-                                get: { discoveryStore.petPass.species },
-                                set: { discoveryStore.updateSpecies($0) }
-                            )) {
-                                ForEach(Species.allCases, id: \.self) { species in
-                                    Text(species.rawValue).tag(species)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-                            Text(discoveryStore.vaccineStatus.label)
-                                .font(.caption.weight(.semibold))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(statusColor.opacity(0.18), in: Capsule())
-                                .foregroundStyle(statusColor)
-                        }
-                        .padding(.vertical, 8)
+                        petPassCard
                     }
                     .buttonStyle(.plain)
+                    .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
                 }
 
-                Section {
-                    if discoveryStore.documents.isEmpty {
+                if discoveryStore.documents.isEmpty {
+                    Section {
                         VStack(spacing: 8) {
                             Text("No documents yet")
                                 .font(.subheadline)
@@ -63,53 +38,47 @@ struct VaultView: View {
                                 .foregroundStyle(.tertiary)
                         }
                         .padding(.vertical, 8)
-                    } else {
-                        ForEach(discoveryStore.documents) { document in
+                    } header: {
+                        HStack {
+                            Text("Documents")
+                            Spacer()
                             Button {
-                                editingDocument = document
+                                isPresentingAddDocument = true
                             } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Text(document.title)
-                                            .font(.headline)
-                                        Spacer()
-                                        if document.isExpired {
-                                            Text("Expired")
-                                                .font(.caption2.weight(.semibold))
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 2)
-                                                .background(OmniPetColor.danger.opacity(0.15), in: Capsule())
-                                                .foregroundStyle(OmniPetColor.danger)
-                                        } else if document.isExpiringSoon {
-                                            Text("Expiring Soon")
-                                                .font(.caption2.weight(.semibold))
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 2)
-                                                .background(OmniPetColor.warning.opacity(0.15), in: Capsule())
-                                                .foregroundStyle(OmniPetColor.warning)
-                                        }
-                                    }
-                                    Text("\(document.type.rawValue) · \(document.expirationText)")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.vertical, 4)
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundStyle(OmniPetColor.emerald)
                             }
-                            .buttonStyle(.plain)
-                        }
-                        .onDelete { offsets in
-                            discoveryStore.deleteDocument(at: offsets)
                         }
                     }
-                } header: {
-                    HStack {
-                        Text("Documents")
-                        Spacer()
-                        Button {
-                            isPresentingAddDocument = true
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(OmniPetColor.emerald)
+                } else {
+                    ForEach(documentGroups, id: \.type) { group in
+                        Section {
+                            ForEach(group.documents) { document in
+                                Button {
+                                    editingDocument = document
+                                } label: {
+                                    documentRow(document)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .onDelete { offsets in
+                                deleteDocuments(in: group, at: offsets)
+                            }
+                        } header: {
+                            if group.type == documentGroups.first?.type {
+                                HStack {
+                                    Text(group.type.rawValue)
+                                    Spacer()
+                                    Button {
+                                        isPresentingAddDocument = true
+                                    } label: {
+                                        Image(systemName: "plus.circle.fill")
+                                            .foregroundStyle(OmniPetColor.emerald)
+                                    }
+                                }
+                            } else {
+                                Text(group.type.rawValue)
+                            }
                         }
                     }
                 }
@@ -185,9 +154,120 @@ struct VaultView: View {
         }
     }
 
+    private struct DocumentGroup {
+        let type: VaultDocument.DocumentType
+        let documents: [VaultDocument]
+    }
+
+    private var documentGroups: [DocumentGroup] {
+        let grouped = Dictionary(grouping: discoveryStore.documents, by: \.type)
+        return VaultDocument.DocumentType.allCases.compactMap { type in
+            guard let docs = grouped[type], !docs.isEmpty else { return nil }
+            return DocumentGroup(type: type, documents: docs)
+        }
+    }
+
+    private func deleteDocuments(in group: DocumentGroup, at offsets: IndexSet) {
+        let idsToDelete = offsets.map { group.documents[$0].id }
+        for id in idsToDelete {
+            if let idx = discoveryStore.documents.firstIndex(where: { $0.id == id }) {
+                discoveryStore.deleteDocument(at: IndexSet(integer: idx))
+            }
+        }
+    }
+
+    private func documentRow(_ document: VaultDocument) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(document.title)
+                    .font(.headline)
+                Spacer()
+                if document.isExpired {
+                    Text("Expired")
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(OmniPetColor.danger.opacity(0.15), in: Capsule())
+                        .foregroundStyle(OmniPetColor.danger)
+                } else if document.isExpiringSoon {
+                    Text("Expiring Soon")
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(OmniPetColor.warning.opacity(0.15), in: Capsule())
+                        .foregroundStyle(OmniPetColor.warning)
+                }
+            }
+            Text(document.expirationText)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var petPassCard: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(discoveryStore.petPass.petName)
+                        .font(.title2.bold())
+                        .foregroundStyle(.white)
+                    Text("\(discoveryStore.petPass.breed) · \(discoveryStore.petPass.ageDescription)")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.8))
+                    Text(discoveryStore.petPass.species.rawValue)
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.white.opacity(0.2), in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                Spacer()
+                VStack(spacing: 6) {
+                    Image(systemName: discoveryStore.petPass.species == .dog ? "dog.fill" : "cat.fill")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.white.opacity(0.9))
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+            }
+            .padding(16)
+
+            HStack {
+                Label(discoveryStore.vaccineStatus.label, systemImage: statusIcon)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(statusColor)
+                Spacer()
+                Text("PET PASS")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white.opacity(0.5))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.black.opacity(0.15))
+        }
+        .background(
+            LinearGradient(
+                colors: [OmniPetColor.emerald, OmniPetColor.emerald.opacity(0.7)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var statusIcon: String {
+        switch discoveryStore.vaccineStatus {
+        case .green: return "checkmark.shield.fill"
+        case .yellow: return "exclamationmark.shield.fill"
+        case .red: return "xmark.shield.fill"
+        }
+    }
+
     private var statusColor: Color {
         switch discoveryStore.vaccineStatus {
-        case .green: return OmniPetColor.emerald
+        case .green: return .white
         case .yellow: return OmniPetColor.warning
         case .red: return OmniPetColor.danger
         }

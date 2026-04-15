@@ -4,6 +4,7 @@ enum AppTab: Hashable {
     case discovery
     case vault
     case activity
+    case settings
 }
 
 enum AppRoute: Hashable {

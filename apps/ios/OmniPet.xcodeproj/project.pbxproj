@@ -1,0 +1,428 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07CEC1838AEC65AC26457DCB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3CFBDCA9E06D1CB0BD935E6 /* SettingsView.swift */; };
+		20394E4536210699CCFF3A4A /* BusinessProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A4F4C628BE10205476F244 /* BusinessProfileView.swift */; };
+		29E90D330110B23DCFE9F099 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9820E9D02B45E5E6F05F990 /* ColorTokens.swift */; };
+		324CAC9BACE1BA5867E04138 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C07A5EE1D268327365B7142 /* ActivityView.swift */; };
+		47506137343379C1BAEA640A /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFFDBEB4F0F27421A5F813D /* RootTabView.swift */; };
+		54F8291C3400D63125C2C132 /* OmniPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE44EDC9B1D10F5CF23C21AA /* OmniPetApp.swift */; };
+		6C77E1C5407029898B391F40 /* ScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98435A82F336873E2D5F16A /* ScannerView.swift */; };
+		8392C70D6420E8F27F5D052D /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6425A1A518639F879DEEE /* AppRoute.swift */; };
+		8849CD924E26CD9C3193ECD0 /* VaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C3900AD29B35BFC6C6CFB7 /* VaultView.swift */; };
+		90DDEEFEFECCB35297648382 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB9AC9ED9510D4C06D2FFAC /* LocationProvider.swift */; };
+		C2D797B206B6725C09FF6366 /* DiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B0BF9515A2F4588940A2F4 /* DiscoveryView.swift */; };
+		D5C51509394D81F42F400202 /* PetPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB899983082B4A7E6CBAE96A /* PetPass.swift */; };
+		EAE9C104625C27CF1CD3C512 /* BusinessProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED39120F7031C5F81649BFA4 /* BusinessProfile.swift */; };
+		FA65B3080F6A0D6F1C5683CF /* DiscoveryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46FC3FBA125AB0FC48196F0 /* DiscoveryStore.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		17C3900AD29B35BFC6C6CFB7 /* VaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultView.swift; sourceTree = "<group>"; };
+		17D6425A1A518639F879DEEE /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
+		2AB9AC9ED9510D4C06D2FFAC /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
+		65B0BF9515A2F4588940A2F4 /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
+		6C07A5EE1D268327365B7142 /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
+		A3A4F4C628BE10205476F244 /* BusinessProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessProfileView.swift; sourceTree = "<group>"; };
+		A98435A82F336873E2D5F16A /* ScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerView.swift; sourceTree = "<group>"; };
+		BE44EDC9B1D10F5CF23C21AA /* OmniPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniPetApp.swift; sourceTree = "<group>"; };
+		D1D39D701CACC8EED7A320D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D46FC3FBA125AB0FC48196F0 /* DiscoveryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryStore.swift; sourceTree = "<group>"; };
+		ED39120F7031C5F81649BFA4 /* BusinessProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessProfile.swift; sourceTree = "<group>"; };
+		EFFFDBEB4F0F27421A5F813D /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		F3CFBDCA9E06D1CB0BD935E6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F9820E9D02B45E5E6F05F990 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
+		FB899983082B4A7E6CBAE96A /* PetPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPass.swift; sourceTree = "<group>"; };
+		FE1D7C94EBF4AC70FAA2D82D /* OmniPet.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = OmniPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		254BAABD7810DD79FFFA9E5A /* OmniPet */ = {
+			isa = PBXGroup;
+			children = (
+				D1D39D701CACC8EED7A320D4 /* Info.plist */,
+				438E15FA33100145C41AF309 /* App */,
+				A8252D35D92CD3A37ABDCFF4 /* Core */,
+				5BEEF91E083C856E4391B7C8 /* DesignSystem */,
+				745CC0BDC18E1C64C347B2DC /* Features */,
+			);
+			path = OmniPet;
+			sourceTree = "<group>";
+		};
+		2F8A78991D6FFF63E935DFD9 /* Vault */ = {
+			isa = PBXGroup;
+			children = (
+				17C3900AD29B35BFC6C6CFB7 /* VaultView.swift */,
+			);
+			path = Vault;
+			sourceTree = "<group>";
+		};
+		438E15FA33100145C41AF309 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				BE44EDC9B1D10F5CF23C21AA /* OmniPetApp.swift */,
+				EFFFDBEB4F0F27421A5F813D /* RootTabView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		5BEEF91E083C856E4391B7C8 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				F9820E9D02B45E5E6F05F990 /* ColorTokens.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		5C7B81B12742C5F763B5954D /* Activity */ = {
+			isa = PBXGroup;
+			children = (
+				6C07A5EE1D268327365B7142 /* ActivityView.swift */,
+			);
+			path = Activity;
+			sourceTree = "<group>";
+		};
+		745CC0BDC18E1C64C347B2DC /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				5C7B81B12742C5F763B5954D /* Activity */,
+				C4B73076C3E87A65208FF100 /* BusinessProfile */,
+				B07080C7340968979F871A77 /* Discovery */,
+				F497184BCD821D7FE6DACEA9 /* Scanner */,
+				8AFE156A45541AFDDDAAB30E /* Settings */,
+				2F8A78991D6FFF63E935DFD9 /* Vault */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		7D860BEB1BA10809C7649A06 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FE1D7C94EBF4AC70FAA2D82D /* OmniPet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8AFE156A45541AFDDDAAB30E /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				F3CFBDCA9E06D1CB0BD935E6 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		9AC8D93DA3DD96B5C39C87A7 = {
+			isa = PBXGroup;
+			children = (
+				254BAABD7810DD79FFFA9E5A /* OmniPet */,
+				7D860BEB1BA10809C7649A06 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A8252D35D92CD3A37ABDCFF4 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				17D6425A1A518639F879DEEE /* AppRoute.swift */,
+				ED39120F7031C5F81649BFA4 /* BusinessProfile.swift */,
+				D46FC3FBA125AB0FC48196F0 /* DiscoveryStore.swift */,
+				2AB9AC9ED9510D4C06D2FFAC /* LocationProvider.swift */,
+				FB899983082B4A7E6CBAE96A /* PetPass.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		B07080C7340968979F871A77 /* Discovery */ = {
+			isa = PBXGroup;
+			children = (
+				65B0BF9515A2F4588940A2F4 /* DiscoveryView.swift */,
+			);
+			path = Discovery;
+			sourceTree = "<group>";
+		};
+		C4B73076C3E87A65208FF100 /* BusinessProfile */ = {
+			isa = PBXGroup;
+			children = (
+				A3A4F4C628BE10205476F244 /* BusinessProfileView.swift */,
+			);
+			path = BusinessProfile;
+			sourceTree = "<group>";
+		};
+		F497184BCD821D7FE6DACEA9 /* Scanner */ = {
+			isa = PBXGroup;
+			children = (
+				A98435A82F336873E2D5F16A /* ScannerView.swift */,
+			);
+			path = Scanner;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		13671F4E3E14D6D95EC55D76 /* OmniPet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FFE0A1D5A444793283D8E9F7 /* Build configuration list for PBXNativeTarget "OmniPet" */;
+			buildPhases = (
+				572FF6941BFFFC9D9EBC6FFD /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OmniPet;
+			packageProductDependencies = (
+			);
+			productName = OmniPet;
+			productReference = FE1D7C94EBF4AC70FAA2D82D /* OmniPet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		610C71E04C52886B2EEC0498 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					13671F4E3E14D6D95EC55D76 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = CC140127AE3A1CCA2456D520 /* Build configuration list for PBXProject "OmniPet" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9AC8D93DA3DD96B5C39C87A7;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7D860BEB1BA10809C7649A06 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				13671F4E3E14D6D95EC55D76 /* OmniPet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		572FF6941BFFFC9D9EBC6FFD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				324CAC9BACE1BA5867E04138 /* ActivityView.swift in Sources */,
+				8392C70D6420E8F27F5D052D /* AppRoute.swift in Sources */,
+				EAE9C104625C27CF1CD3C512 /* BusinessProfile.swift in Sources */,
+				20394E4536210699CCFF3A4A /* BusinessProfileView.swift in Sources */,
+				29E90D330110B23DCFE9F099 /* ColorTokens.swift in Sources */,
+				FA65B3080F6A0D6F1C5683CF /* DiscoveryStore.swift in Sources */,
+				C2D797B206B6725C09FF6366 /* DiscoveryView.swift in Sources */,
+				90DDEEFEFECCB35297648382 /* LocationProvider.swift in Sources */,
+				54F8291C3400D63125C2C132 /* OmniPetApp.swift in Sources */,
+				D5C51509394D81F42F400202 /* PetPass.swift in Sources */,
+				47506137343379C1BAEA640A /* RootTabView.swift in Sources */,
+				6C77E1C5407029898B391F40 /* ScannerView.swift in Sources */,
+				07CEC1838AEC65AC26457DCB /* SettingsView.swift in Sources */,
+				8849CD924E26CD9C3193ECD0 /* VaultView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5FC4D587942C9C3FD0CFD902 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = OmniPet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.omnipet.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		899CFFBC0C328CECEE4902CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		8ED3881CD0CDBD3CD2A12B9D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		C5C3A8556C6426D196E024BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = OmniPet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.omnipet.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CC140127AE3A1CCA2456D520 /* Build configuration list for PBXProject "OmniPet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				899CFFBC0C328CECEE4902CC /* Debug */,
+				8ED3881CD0CDBD3CD2A12B9D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FFE0A1D5A444793283D8E9F7 /* Build configuration list for PBXNativeTarget "OmniPet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5FC4D587942C9C3FD0CFD902 /* Debug */,
+				C5C3A8556C6426D196E024BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 610C71E04C52886B2EEC0498 /* Project object */;
+}
