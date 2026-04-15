@@ -173,13 +173,62 @@ figma/
 
 ## Current Implementation Status
 
-This repository currently provides:
-- Product and architecture documentation
-- iOS module-first SwiftUI scaffold
-- Placeholder feature screens
-- Service README stubs and shared flow documentation
+### ✅ Built and working in iOS prototype
 
-Planned next stage is wiring the app scaffold to concrete back-end services and production-grade data pipelines.
+- **Discovery tab**
+  - Live Apple Maps search (`MKLocalSearch`)
+  - Category filtering (Vet, Daycare, Grooming, Boarding)
+  - List/map toggle, pull-to-refresh, favorites
+  - Smart suggestion banners for expiring docs
+  - Color-coded map pins
+- **Vault tab**
+  - VisionKit scan entry flow
+  - Manual create/edit/delete of documents
+  - Grouping by type (Medical, Certificates, Identity, Diet)
+  - Expiration state tracking (expired / expiring soon / valid)
+  - Pet pass card UI and local JSON persistence
+- **Activity tab**
+  - Local check-in event history with statuses (Sent, Opened, Action Needed)
+  - Detail views, relative timestamps, swipe-to-delete
+- **Business Profile flow**
+  - Category-specific intent capture
+  - Requirement checklist with ready/missing/expired state
+  - Local handshake history + call/website actions
+- **Settings & onboarding**
+  - Onboarding flow and single-pet setup
+  - Local data stats and reset/replay controls
+- **Persistence layer**
+  - Local JSON files for pet pass, documents, activity, and favorites
+  - `UserDefaults` for onboarding/search state
+
+### ⚠️ Partially implemented
+
+- Document scanning captures images, but only metadata is currently persisted.
+- Consent + activity creation are implemented, but share execution is local-only and simulated.
+- Partnership state is static for live search results (`.nonPartner`), with richer partner states only in sample/local data.
+
+### 🚫 Missing (known gaps)
+
+- No production backend/API wiring
+- No cloud sync or accounts
+- No multi-pet support
+- No real business inbox/portal for shared packets
+- No notification pipeline (expiration reminders, status push updates)
+- No search history/recent queries UX
+- No reviews/ratings, scheduling, or messaging layer
+
+### Backend blocker (current highest-priority constraint)
+
+The core value proposition—**securely sharing pet records with businesses and tracking real delivery/open states**—is blocked until backend services are available and integrated.
+
+Current iOS flows are intentionally local-first and prove UX, but they cannot complete true handshake delivery without:
+
+1. Auth + account system
+2. Vault packet upload/storage service
+3. Business-side retrieval endpoint/portal
+4. Delivery + open/review event webhooks back into Activity
+
+Until those services exist, check-in/sharing remains a prototype simulation.
 
 ---
 
