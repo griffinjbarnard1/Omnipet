@@ -48,6 +48,9 @@ struct BusinessProfileView: View {
                     Text(business.summary)
                         .foregroundStyle(.secondary)
                     HStack(spacing: 12) {
+                        Label("\(business.reviews.ratingText) · \(business.reviews.reviewCount) reviews", systemImage: "star.fill")
+                            .foregroundStyle(OmniPetColor.warning)
+
                         Label(business.partnershipStatus.label, systemImage: business.partnershipStatus == .partner ? "checkmark.seal.fill" : "mappin")
                             .foregroundStyle(business.partnershipStatus == .partner ? OmniPetColor.emerald : OmniPetColor.grayPin)
                         Label(String(format: "%.1f mi", business.distanceMiles), systemImage: "location")
@@ -118,6 +121,27 @@ struct BusinessProfileView: View {
                 }
             }
 
+
+
+            Section("Appointments & Messaging") {
+                if business.acceptsAppointments {
+                    Button("Request Appointment") {
+                        let intent = currentIntent()
+                        discoveryStore.logInteraction(businessName: business.name, detail: "Appointment requested. Intent: \(intent.summary).", status: .sent)
+                    }
+                }
+                if business.allowsMessaging {
+                    Button("Send Message") {
+                        discoveryStore.logInteraction(businessName: business.name, detail: "Message sent to business portal inbox.", status: .opened)
+                    }
+                }
+                if !business.acceptsAppointments && !business.allowsMessaging {
+                    Text("This listing is read-only. Use call or website for booking.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             Section("Handshake") {
                 Button("Check-In with Vault") {
                     isShowingConsentSheet = true
@@ -140,6 +164,7 @@ struct BusinessProfileView: View {
             }
         }
         .navigationTitle("Business Profile")
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isShowingConsentSheet)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -163,7 +188,7 @@ struct BusinessProfileView: View {
             ShareConsentSheet(
                 business: business,
                 petName: discoveryStore.petPass.petName,
-                documents: discoveryStore.documents
+                documents: discoveryStore.selectedPetDocuments
             ) { titles, durationLabel in
                 discoveryStore.checkIn(
                     with: business,

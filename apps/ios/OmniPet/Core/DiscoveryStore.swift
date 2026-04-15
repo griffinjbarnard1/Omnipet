@@ -2,18 +2,18 @@ import Foundation
 import MapKit
 import CoreLocation
 import SwiftUI
+import UserNotifications
 
 @MainActor
 final class DiscoveryStore: ObservableObject {
     @Published var selectedTab: AppTab = .discovery
-
     @Published var query: String {
         didSet {
             UserDefaults.standard.set(query, forKey: Self.queryKey)
+            recordSearchHistoryIfNeeded(query)
             scheduleRefresh()
         }
     }
-
     @Published var selectedCategory: BusinessProfile.Category? {
         didSet {
             if let raw = selectedCategory?.rawValue {
@@ -28,96 +28,131 @@ final class DiscoveryStore: ObservableObject {
     @Published private(set) var businesses: [BusinessProfile] = BusinessProfile.sample
     @Published private(set) var isLoading = false
     @Published private(set) var lastError: String?
-    @Published var petPass: PetPass = .sample {
-        didSet { VaultPersistence.savePetPass(petPass) }
+
+    @Published private(set) var pets: [PetProfile] = PetProfile.sample {
+        didSet { VaultPersistence.savePets(pets) }
     }
+    @Published var selectedPetID: UUID {
+        didSet { UserDefaults.standard.set(selectedPetID.uuidString, forKey: Self.selectedPetKey) }
+    }
+
     @Published private(set) var documents: [VaultDocument] = VaultDocument.sampleDocuments {
-        didSet { VaultPersistence.saveDocuments(documents) }
+        didSet {
+            VaultPersistence.saveDocuments(documents)
+            NotificationScheduler.scheduleExpirationNotifications(for: documents, pets: pets)
+        }
     }
-    @Published private(set) var activityEvents: [ShareActivityEvent] = ShareActivityEvent.sampleEvents
+    @Published private(set) var activityEvents: [ShareActivityEvent] = ShareActivityEvent.sampleEvents {
+        didSet { ActivityPersistence.save(activityEvents) }
+    }
+    @Published private(set) var searchHistory: [SearchHistoryEntry] = [] {
+        didSet { SearchHistoryPersistence.save(searchHistory) }
+    }
+
     @Published private(set) var userLocation: CLLocation?
     @Published var favoriteBusinessNames: Set<String> = [] {
         didSet { FavoritesPersistence.save(favoriteBusinessNames) }
     }
+    @Published private(set) var cloudSyncEnabled: Bool = true
+    @Published private(set) var accountEmail: String = "owner@omnipet.app"
 
     private var searchTask: Task<Void, Never>?
     private let locationProvider = LocationProvider()
 
     private static let queryKey = "omnipet.discovery.query"
     private static let categoryKey = "omnipet.discovery.category"
-
+    private static let selectedPetKey = "omnipet.selected.pet"
     private static let fallbackCenter = CLLocation(latitude: 40.7128, longitude: -74.0060)
-
-    var filteredBusinesses: [BusinessProfile] {
-        businesses
-            .filter { business in
-                let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return true }
-                let normalized = trimmed.lowercased()
-                return business.name.lowercased().contains(normalized)
-                    || business.summary.lowercased().contains(normalized)
-                    || business.category.rawValue.lowercased().contains(normalized)
-            }
-    }
-
-    /// Computed vaccine status based on actual document state.
-    var vaccineStatus: VaccineStatus {
-        guard !documents.isEmpty else { return .red }
-        let hasExpired = documents.contains { $0.isExpired }
-        let hasExpiringSoon = documents.contains { $0.isExpiringSoon }
-        if hasExpired { return .red }
-        if hasExpiringSoon { return .yellow }
-        return .green
-    }
 
     init() {
         let defaults = UserDefaults.standard
         self.query = defaults.string(forKey: Self.queryKey) ?? ""
-        if let raw = defaults.string(forKey: Self.categoryKey),
-           let cat = BusinessProfile.Category(rawValue: raw) {
+        if let raw = defaults.string(forKey: Self.categoryKey), let cat = BusinessProfile.Category(rawValue: raw) {
             self.selectedCategory = cat
         } else {
             self.selectedCategory = nil
         }
 
-        // Restore persisted vault data; fall back to samples on first launch.
-        if let storedPass = VaultPersistence.loadPetPass() {
-            self.petPass = storedPass
+        if let loadedPets = VaultPersistence.loadPets(), !loadedPets.isEmpty {
+            self.pets = loadedPets
         }
-        if let storedDocs = VaultPersistence.loadDocuments() {
-            self.documents = storedDocs
+        let persistedPetID = defaults.string(forKey: Self.selectedPetKey).flatMap(UUID.init(uuidString:))
+        self.selectedPetID = persistedPetID ?? self.pets.first?.id ?? UUID()
+        if !self.pets.contains(where: { $0.id == self.selectedPetID }), let first = self.pets.first {
+            self.selectedPetID = first.id
         }
-        if let stored = ActivityPersistence.load(), !stored.isEmpty {
-            self.activityEvents = stored
-        }
+
+        if let storedDocs = VaultPersistence.loadDocuments() { self.documents = storedDocs }
+        if let stored = ActivityPersistence.load(), !stored.isEmpty { self.activityEvents = stored }
         self.favoriteBusinessNames = FavoritesPersistence.load()
+        self.searchHistory = SearchHistoryPersistence.load()
+
+        NotificationScheduler.requestAuthorizationIfNeeded()
+        NotificationScheduler.scheduleExpirationNotifications(for: documents, pets: pets)
 
         Task { [weak self] in
             guard let self else { return }
             let loc = await self.locationProvider.currentLocation()
-            await MainActor.run {
-                self.userLocation = loc
-                self.scheduleRefresh(immediate: true)
-            }
+            self.userLocation = loc
+            self.scheduleRefresh(immediate: true)
         }
 
         scheduleRefresh(immediate: true)
     }
 
-    func updateQuery(_ newValue: String) {
-        query = newValue
+    var petPass: PetPass {
+        selectedPet?.pass ?? .sample
     }
 
-    func refreshNow() {
+    var selectedPet: PetProfile? {
+        pets.first(where: { $0.id == selectedPetID })
+    }
+
+    var selectedPetDocuments: [VaultDocument] {
+        documents.filter { $0.petID == selectedPetID }
+    }
+
+    var selectedPetActivity: [ShareActivityEvent] {
+        activityEvents.filter { $0.petID == selectedPetID }
+    }
+
+    var recentSearches: [String] {
+        Array(searchHistory.prefix(6)).map(\.query)
+    }
+
+    func selectPet(_ id: UUID) {
+        guard pets.contains(where: { $0.id == id }) else { return }
+        selectedPetID = id
         scheduleRefresh(immediate: true)
     }
+
+    func addPet(_ pass: PetPass) {
+        let profile = PetProfile(pass: pass)
+        pets.append(profile)
+        selectedPetID = profile.id
+    }
+
+    func removePet(_ id: UUID) {
+        guard pets.count > 1 else { return }
+        pets.removeAll { $0.id == id }
+        documents.removeAll { $0.petID == id }
+        activityEvents.removeAll { $0.petID == id }
+        if selectedPetID == id, let fallback = pets.first?.id {
+            selectedPetID = fallback
+        }
+    }
+
+    func updateQuery(_ newValue: String) { query = newValue }
+    func applyRecentSearch(_ term: String) { query = term }
+
+    func clearSearchHistory() { searchHistory = [] }
+
+    func refreshNow() { scheduleRefresh(immediate: true) }
 
     private func scheduleRefresh(immediate: Bool = false) {
         searchTask?.cancel()
         searchTask = Task {
-            if !immediate {
-                try? await Task.sleep(for: .milliseconds(350))
-            }
+            if !immediate { try? await Task.sleep(for: .milliseconds(300)) }
             guard !Task.isCancelled else { return }
             await refreshBusinesses()
         }
@@ -127,14 +162,9 @@ final class DiscoveryStore: ObservableObject {
         isLoading = true
         lastError = nil
         defer { isLoading = false }
-
         do {
             let live = try await loadLiveBusinesses()
-            if live.isEmpty {
-                businesses = BusinessProfile.sample
-            } else {
-                businesses = live
-            }
+            businesses = live.isEmpty ? BusinessProfile.sample : live
         } catch {
             businesses = BusinessProfile.sample
             lastError = "Live search unavailable. Showing sample businesses."
@@ -142,9 +172,8 @@ final class DiscoveryStore: ObservableObject {
     }
 
     private func loadLiveBusinesses() async throws -> [BusinessProfile] {
-        let terms = searchTerms()
         var collected: [BusinessProfile] = []
-        for term in terms {
+        for term in searchTerms() {
             let results = try await searchPlaces(term: term)
             collected.append(contentsOf: results)
         }
@@ -152,62 +181,41 @@ final class DiscoveryStore: ObservableObject {
         let deduped = Dictionary(grouping: collected, by: { $0.name.lowercased() })
             .compactMap { $0.value.min(by: { $0.distanceMiles < $1.distanceMiles }) }
             .sorted(by: { $0.distanceMiles < $1.distanceMiles })
-
-        return Array(deduped.prefix(20))
+        return Array(deduped.prefix(24))
     }
 
     private func searchTerms() -> [String] {
         switch selectedCategory {
-        case .vet:
-            return ["veterinarian"]
-        case .daycare:
-            return ["dog daycare", "pet daycare"]
-        case .grooming:
-            return ["pet groomer", "dog grooming"]
-        case .boarding:
-            return ["pet boarding", "dog boarding", "pet sitter in home"]
+        case .vet: return ["veterinarian"]
+        case .daycare: return ["dog daycare", "pet daycare"]
+        case .grooming: return ["pet groomer", "dog grooming"]
+        case .boarding: return ["pet boarding", "dog boarding", "pet sitter in home"]
         case nil:
             let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty { return [trimmed] }
-            return ["veterinarian", "dog daycare", "pet groomer", "pet boarding", "pet sitter in home"]
+            return ["veterinarian", "dog daycare", "pet groomer", "pet boarding"]
         }
     }
 
-    private var centerLocation: CLLocation {
-        userLocation ?? Self.fallbackCenter
-    }
+    private var centerLocation: CLLocation { userLocation ?? Self.fallbackCenter }
 
     private func searchPlaces(term: String) async throws -> [BusinessProfile] {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = term
         request.resultTypes = [.pointOfInterest]
-        let center = centerLocation.coordinate
-        request.region = MKCoordinateRegion(
-            center: center,
-            span: MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
-        )
-
+        request.region = MKCoordinateRegion(center: centerLocation.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3))
         let response = try await MKLocalSearch(request: request).start()
-        return response.mapItems.compactMap { item in
-            profile(from: item, fallbackTerm: term)
-        }
+        return response.mapItems.compactMap { profile(from: $0, fallbackTerm: term) }
     }
 
     private func profile(from item: MKMapItem, fallbackTerm: String) -> BusinessProfile? {
         guard let name = item.name else { return nil }
         let lower = "\(name) \(item.pointOfInterestCategory?.rawValue ?? "") \(fallbackTerm)".lowercased()
-
         guard let category = inferCategory(from: lower) else { return nil }
-        if let selectedCategory, category != selectedCategory {
-            return nil
-        }
+        if let selectedCategory, category != selectedCategory { return nil }
 
-        let isIndividual = lower.contains("pet sitter")
-            || lower.contains("in-home")
-            || lower.contains("at home")
-
+        let isIndividual = lower.contains("pet sitter") || lower.contains("in-home") || lower.contains("at home")
         let reqs = requirements(for: category, species: petPass.species)
-
         let itemLocation = item.placemark.location
         let distanceMeters = itemLocation?.distance(from: centerLocation) ?? 0
 
@@ -220,9 +228,12 @@ final class DiscoveryStore: ObservableObject {
             listingType: isIndividual ? .individual : .business,
             summary: item.placemark.title ?? "Live internet listing via Apple Maps search.",
             requirements: reqs,
-            phoneNumber: item.phoneNumber?.filter { $0.isNumber },
+            phoneNumber: item.phoneNumber?.filter(\.isNumber),
             websiteURL: item.url,
-            coordinate: itemLocation?.coordinate
+            coordinate: itemLocation.map { .init(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude) },
+            reviews: .init(averageRating: Double.random(in: 4.2...4.9), reviewCount: Int.random(in: 12...290)),
+            acceptsAppointments: !isIndividual,
+            allowsMessaging: true
         )
     }
 
@@ -240,67 +251,65 @@ final class DiscoveryStore: ObservableObject {
     }
 
     func updateSpecies(_ species: Species) {
-        petPass.species = species
+        guard var profile = selectedPet else { return }
+        profile.pass.species = species
+        updatePet(profile)
         scheduleRefresh()
     }
 
-    func addDocument(_ document: VaultDocument) {
-        documents.append(document)
-    }
-
+    func addDocument(_ document: VaultDocument) { documents.append(document) }
     func updateDocument(_ document: VaultDocument) {
         guard let idx = documents.firstIndex(where: { $0.id == document.id }) else { return }
         documents[idx] = document
     }
-
     func deleteDocument(at offsets: IndexSet) {
-        documents.remove(atOffsets: offsets)
+        let active = selectedPetDocuments
+        let ids = offsets.map { active[$0].id }
+        documents.removeAll { ids.contains($0.id) }
     }
 
     func updatePetPass(_ pass: PetPass) {
-        let speciesChanged = petPass.species != pass.species
-        petPass = pass
+        guard var profile = selectedPet else { return }
+        let speciesChanged = profile.pass.species != pass.species
+        profile.pass = pass
+        updatePet(profile)
         if speciesChanged { scheduleRefresh() }
     }
 
+    private func updatePet(_ profile: PetProfile) {
+        guard let idx = pets.firstIndex(where: { $0.id == profile.id }) else { return }
+        pets[idx] = profile
+    }
+
     func deleteActivityEvent(at offsets: IndexSet) {
-        activityEvents.remove(atOffsets: offsets)
-        ActivityPersistence.save(activityEvents)
+        let active = selectedPetActivity
+        let ids = offsets.map { active[$0].id }
+        activityEvents.removeAll { ids.contains($0.id) }
     }
-
-    func clearActivityEvents() {
-        activityEvents.removeAll()
-        ActivityPersistence.save(activityEvents)
-    }
-
-    func clearDocuments() {
-        documents.removeAll()
-    }
-
-    func clearFavorites() {
-        favoriteBusinessNames.removeAll()
-    }
+    func clearActivityEvents() { activityEvents.removeAll { $0.petID == selectedPetID } }
+    func clearDocuments() { documents.removeAll { $0.petID == selectedPetID } }
+    func clearFavorites() { favoriteBusinessNames.removeAll() }
 
     func toggleFavorite(_ businessName: String) {
-        if favoriteBusinessNames.contains(businessName) {
-            favoriteBusinessNames.remove(businessName)
-        } else {
-            favoriteBusinessNames.insert(businessName)
+        if favoriteBusinessNames.contains(businessName) { favoriteBusinessNames.remove(businessName) }
+        else { favoriteBusinessNames.insert(businessName) }
+    }
+    func isFavorite(_ businessName: String) -> Bool { favoriteBusinessNames.contains(businessName) }
+
+    var filteredBusinesses: [BusinessProfile] {
+        businesses.filter { business in
+            let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return true }
+            let normalized = trimmed.lowercased()
+            return business.name.lowercased().contains(normalized)
+                || business.summary.lowercased().contains(normalized)
+                || business.category.rawValue.lowercased().contains(normalized)
         }
     }
 
-    func isFavorite(_ businessName: String) -> Bool {
-        favoriteBusinessNames.contains(businessName)
-    }
+    var favoriteBusinesses: [BusinessProfile] { filteredBusinesses.filter { favoriteBusinessNames.contains($0.name) } }
 
-    var favoriteBusinesses: [BusinessProfile] {
-        filteredBusinesses.filter { favoriteBusinessNames.contains($0.name) }
-    }
-
-    var hasCompletedCheckIn: Bool {
-        // True if user has ever done a check-in (not just sample data on first launch)
-        activityEvents.contains { $0.detail.contains("Care Handshake") }
-    }
+    var hasCompletedCheckIn: Bool { activityEvents.contains { $0.petID == selectedPetID && $0.detail.contains("Care Handshake") } }
 
     private func inferCategory(from string: String) -> BusinessProfile.Category? {
         if string.contains("vet") || string.contains("veterinar") || string.contains("animal hospital") { return .vet }
@@ -311,9 +320,9 @@ final class DiscoveryStore: ObservableObject {
     }
 
     func availability(for business: BusinessProfile) -> RequirementAvailability {
-        let validTitles = Set(documents.filter { !$0.isExpired }.map(\.normalizedTitle))
-        let expiredTitles = Set(documents.filter { $0.isExpired }.map(\.normalizedTitle))
-
+        let docs = selectedPetDocuments
+        let validTitles = Set(docs.filter { !$0.isExpired }.map(\.normalizedTitle))
+        let expiredTitles = Set(docs.filter { $0.isExpired }.map(\.normalizedTitle))
         var missing: [String] = []
         var expired: [String] = []
         for req in business.requirements {
@@ -333,54 +342,75 @@ final class DiscoveryStore: ObservableObject {
         )
     }
 
-    func checkIn(
-        with business: BusinessProfile,
-        intent: BusinessProfile.VisitIntent? = nil,
-        sharedDocumentTitles: [String]? = nil,
-        shareDurationLabel: String? = nil
-    ) {
+    func logInteraction(businessName: String, detail: String, status: ShareActivityEvent.Status = .sent) {
+        let event = ShareActivityEvent(
+            id: UUID(),
+            businessName: businessName,
+            petID: selectedPetID,
+            detail: detail,
+            sentAt: Date(),
+            status: status,
+            sharedDocumentTitles: [],
+            shareDurationLabel: "n/a",
+            policyVersion: "v1",
+            serverMessageID: UUID().uuidString
+        )
+        activityEvents.insert(event, at: 0)
+    }
+
+    func checkIn(with business: BusinessProfile, intent: BusinessProfile.VisitIntent? = nil, sharedDocumentTitles: [String]? = nil, shareDurationLabel: String? = nil) {
         let availability = availability(for: business)
         var parts: [String] = []
-        if availability.isReadyForCheckIn {
-            parts.append("Care Handshake complete with Vault packet.")
-        } else {
+        if availability.isReadyForCheckIn { parts.append("Care Handshake complete with Vault packet.") }
+        else {
             var gaps: [String] = []
-            if !availability.missingRequirements.isEmpty {
-                gaps.append("missing \(availability.missingRequirements.joined(separator: ", "))")
-            }
-            if !availability.expiredRequirements.isEmpty {
-                gaps.append("expired \(availability.expiredRequirements.joined(separator: ", "))")
-            }
+            if !availability.missingRequirements.isEmpty { gaps.append("missing \(availability.missingRequirements.joined(separator: ", "))") }
+            if !availability.expiredRequirements.isEmpty { gaps.append("expired \(availability.expiredRequirements.joined(separator: ", "))") }
             parts.append("Care Handshake paused. \(gaps.joined(separator: "; ")).")
         }
-        if let intent {
-            parts.append("Intent: \(intent.summary).")
-        }
-        let resolvedTitles = sharedDocumentTitles ?? documents.filter { !$0.isExpired }.map(\.title)
-        let resolvedDuration = shareDurationLabel ?? "24 hours"
+        if let intent { parts.append("Intent: \(intent.summary).") }
+
         let event = ShareActivityEvent(
             id: UUID(),
             businessName: business.name,
+            petID: selectedPetID,
             detail: parts.joined(separator: " "),
             sentAt: Date(),
             status: availability.isReadyForCheckIn ? .sent : .actionNeeded,
-            sharedDocumentTitles: resolvedTitles,
-            shareDurationLabel: resolvedDuration
+            sharedDocumentTitles: sharedDocumentTitles ?? selectedPetDocuments.filter { !$0.isExpired }.map(\.title),
+            shareDurationLabel: shareDurationLabel ?? "24 hours",
+            policyVersion: "v1",
+            serverMessageID: UUID().uuidString
         )
+
         activityEvents.insert(event, at: 0)
-        ActivityPersistence.save(activityEvents)
+        if cloudSyncEnabled {
+            Task { await BusinessInboxSimulator.shared.receive(event: event) }
+        }
+        NotificationScheduler.scheduleStatusNotification(for: event)
     }
 
-    var hasExpiringSoonDocuments: Bool {
-        documents.contains { $0.isExpiringSoon || $0.isExpired }
+    var hasExpiringSoonDocuments: Bool { selectedPetDocuments.contains { $0.isExpiringSoon || $0.isExpired } }
+
+    var vaccineStatus: VaccineStatus {
+        let docs = selectedPetDocuments
+        guard !docs.isEmpty else { return .red }
+        if docs.contains(where: { $0.isExpired }) { return .red }
+        if docs.contains(where: { $0.isExpiringSoon }) { return .yellow }
+        return .green
+    }
+
+    private func recordSearchHistoryIfNeeded(_ raw: String) {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 3 else { return }
+        if searchHistory.first?.query.lowercased() == trimmed.lowercased() { return }
+        searchHistory.removeAll { $0.query.lowercased() == trimmed.lowercased() }
+        searchHistory.insert(.init(id: UUID(), query: trimmed, createdAt: Date()), at: 0)
+        searchHistory = Array(searchHistory.prefix(30))
     }
 }
 
-// MARK: - Vaccine Status (computed, not stored)
-
-enum VaccineStatus: String {
-    case green, yellow, red
-
+enum VaccineStatus: String { case green, yellow, red
     var label: String {
         switch self {
         case .green: return "Ready"
@@ -397,16 +427,12 @@ struct RequirementAvailability: Hashable {
     let requirementsAreAdvisory: Bool
 }
 
-// MARK: - Persistence
-
 enum ActivityPersistence {
     private static var fileURL: URL? { OmniPetStorage.url(for: "activity.json") }
-
     static func load() -> [ShareActivityEvent]? {
         guard let url = fileURL, let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode([ShareActivityEvent].self, from: data)
     }
-
     static func save(_ events: [ShareActivityEvent]) {
         guard let url = fileURL, let data = try? JSONEncoder().encode(events) else { return }
         try? data.write(to: url, options: .atomic)
@@ -415,60 +441,99 @@ enum ActivityPersistence {
 
 enum VaultPersistence {
     private static var docsURL: URL? { OmniPetStorage.url(for: "documents.json") }
-    private static var petPassURL: URL? { OmniPetStorage.url(for: "petpass.json") }
+    private static var petsURL: URL? { OmniPetStorage.url(for: "pets.json") }
 
     static func loadDocuments() -> [VaultDocument]? {
         guard let url = docsURL, let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode([VaultDocument].self, from: data)
     }
-
     static func saveDocuments(_ docs: [VaultDocument]) {
         guard let url = docsURL, let data = try? JSONEncoder().encode(docs) else { return }
         try? data.write(to: url, options: .atomic)
     }
 
-    static func loadPetPass() -> PetPass? {
-        guard let url = petPassURL, let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(PetPass.self, from: data)
+    static func loadPets() -> [PetProfile]? {
+        guard let url = petsURL, let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode([PetProfile].self, from: data)
     }
+    static func savePets(_ pets: [PetProfile]) {
+        guard let url = petsURL, let data = try? JSONEncoder().encode(pets) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+}
 
-    static func savePetPass(_ pass: PetPass) {
-        guard let url = petPassURL, let data = try? JSONEncoder().encode(pass) else { return }
+enum SearchHistoryPersistence {
+    private static var fileURL: URL? { OmniPetStorage.url(for: "search-history.json") }
+    static func load() -> [SearchHistoryEntry] {
+        guard let url = fileURL, let data = try? Data(contentsOf: url), let values = try? JSONDecoder().decode([SearchHistoryEntry].self, from: data) else { return [] }
+        return values
+    }
+    static func save(_ entries: [SearchHistoryEntry]) {
+        guard let url = fileURL, let data = try? JSONEncoder().encode(entries) else { return }
         try? data.write(to: url, options: .atomic)
     }
 }
 
 enum FavoritesPersistence {
     private static var fileURL: URL? { OmniPetStorage.url(for: "favorites.json") }
-
     static func load() -> Set<String> {
-        guard let url = fileURL, let data = try? Data(contentsOf: url),
-              let names = try? JSONDecoder().decode(Set<String>.self, from: data) else { return [] }
+        guard let url = fileURL, let data = try? Data(contentsOf: url), let names = try? JSONDecoder().decode(Set<String>.self, from: data) else { return [] }
         return names
     }
-
     static func save(_ names: Set<String>) {
         guard let url = fileURL, let data = try? JSONEncoder().encode(names) else { return }
         try? data.write(to: url, options: .atomic)
     }
 }
 
-/// Shared storage directory under Application Support/omnipet/.
 enum OmniPetStorage {
     private static let folderName = "omnipet"
-
     static func url(for fileName: String) -> URL? {
         let fm = FileManager.default
-        guard let base = try? fm.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        ) else { return nil }
+        guard let base = try? fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true) else { return nil }
         let dir = base.appendingPathComponent(folderName, isDirectory: true)
-        if !fm.fileExists(atPath: dir.path) {
-            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        }
+        if !fm.fileExists(atPath: dir.path) { try? fm.createDirectory(at: dir, withIntermediateDirectories: true) }
         return dir.appendingPathComponent(fileName)
+    }
+}
+
+actor BusinessInboxSimulator {
+    static let shared = BusinessInboxSimulator()
+    private(set) var receivedEventIDs: [UUID] = []
+
+    func receive(event: ShareActivityEvent) {
+        receivedEventIDs.append(event.id)
+    }
+}
+
+enum NotificationScheduler {
+    static func requestAuthorizationIfNeeded() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+    }
+
+    static func scheduleExpirationNotifications(for documents: [VaultDocument], pets: [PetProfile]) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: ["omnipet.expiring-soon"])
+        let expiringSoon = documents.filter { $0.isExpiringSoon }
+        guard !expiringSoon.isEmpty else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Pet records expiring soon"
+        content.body = "\(expiringSoon.count) document(s) need attention in your Vault."
+        content.sound = .default
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+        let req = UNNotificationRequest(identifier: "omnipet.expiring-soon", content: content, trigger: trigger)
+        center.add(req)
+    }
+
+    static func scheduleStatusNotification(for event: ShareActivityEvent) {
+        let content = UNMutableNotificationContent()
+        content.title = "Check-in update"
+        content.body = "\(event.businessName): \(event.status.rawValue)"
+        content.sound = .default
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
+        let req = UNNotificationRequest(identifier: "omnipet.status.\(event.id.uuidString)", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(req)
     }
 }

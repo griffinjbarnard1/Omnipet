@@ -6,7 +6,7 @@ struct ActivityView: View {
 
     var body: some View {
         NavigationStack {
-            if discoveryStore.activityEvents.isEmpty {
+            if discoveryStore.selectedPetActivity.isEmpty {
                 ContentUnavailableView(
                     "No Activity Yet",
                     systemImage: "paperplane",
@@ -15,7 +15,7 @@ struct ActivityView: View {
                 .navigationTitle("Activity")
             } else {
                 List {
-                    ForEach(discoveryStore.activityEvents) { event in
+                    ForEach(discoveryStore.selectedPetActivity) { event in
                         NavigationLink(value: event) {
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack {
@@ -110,6 +110,18 @@ struct ActivityDetailView: View {
             }
 
             Section("Share Settings") {
+                HStack {
+                    Text("Policy")
+                    Spacer()
+                    Text(event.policyVersion)
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text("Message ID")
+                    Spacer()
+                    Text(event.serverMessageID.prefix(8))
+                        .foregroundStyle(.secondary)
+                }
                 HStack {
                     Text("Access Duration")
                     Spacer()

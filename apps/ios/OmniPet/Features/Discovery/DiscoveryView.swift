@@ -47,8 +47,8 @@ struct DiscoveryView: View {
     private var mapContent: some View {
         Map(position: $cameraPosition) {
             ForEach(discoveryStore.filteredBusinesses) { business in
-                if let coord = business.coordinate {
-                    Annotation(business.name, coordinate: coord) {
+                if let point = business.coordinate {
+                    Annotation(business.name, coordinate: point.coordinate) {
                         Button {
                             selectedBusiness = business
                         } label: {
@@ -107,6 +107,32 @@ struct DiscoveryView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                }
+
+                if !discoveryStore.recentSearches.isEmpty {
+                    Section("Recent Searches") {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(discoveryStore.recentSearches, id: \.self) { term in
+                                    Button(term) {
+                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                            discoveryStore.applyRecentSearch(term)
+                                        }
+                                    }
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(.quaternary, in: Capsule())
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        Button("Clear Search History", role: .destructive) {
+                            discoveryStore.clearSearchHistory()
+                        }
+                        .font(.caption)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
                 if discoveryStore.hasExpiringSoonDocuments {
@@ -189,6 +215,7 @@ struct DiscoveryView: View {
         .refreshable {
             discoveryStore.refreshNow()
         }
+        .animation(.easeInOut(duration: 0.2), value: discoveryStore.filteredBusinesses.map(\.id))
     }
 
     private func businessRow(_ business: BusinessProfile) -> some View {
@@ -209,6 +236,7 @@ struct DiscoveryView: View {
             }
             HStack(spacing: 6) {
                 Text(business.category.rawValue)
+                    .foregroundStyle(.primary)
                     .font(.caption2.weight(.semibold))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
@@ -237,6 +265,14 @@ struct DiscoveryView: View {
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(OmniPetColor.danger)
                 }
+            }
+            HStack(spacing: 6) {
+                Image(systemName: "star.fill")
+                    .font(.caption2)
+                    .foregroundStyle(OmniPetColor.warning)
+                Text("\(business.reviews.ratingText) (\(business.reviews.reviewCount))")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
             }
             Text(business.summary)
                 .font(.subheadline)
@@ -275,7 +311,7 @@ struct DiscoveryView: View {
     }
 
     private func recenterMap() {
-        let coords = discoveryStore.filteredBusinesses.compactMap(\.coordinate)
+        let coords = discoveryStore.filteredBusinesses.compactMap(\.coordinate).map(\.coordinate)
         guard let first = coords.first else { return }
         if coords.count == 1 {
             cameraPosition = .region(MKCoordinateRegion(center: first, span: MKCoordinateSpan(latitudeDelta: 0.15, longitudeDelta: 0.15)))
